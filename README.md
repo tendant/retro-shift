@@ -5,6 +5,9 @@ Godot 4 / GDScript. Design: [retroshift-design-v0.4.md](retroshift-design-v0.4.m
 
 ## Run
 
+`make help` lists the shortcuts (`make run TRACK=s_curve`, `make debug`, `make test`, ...).
+Or call Godot directly:
+
 ```sh
 godot --path .                          # play (opens the race scene)
 godot --path . -- --track=s_curve       # pick a test track
