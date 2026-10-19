@@ -13,11 +13,17 @@ extends Resource
 @export var overcap_decel_mps2: float = 6.0
 
 @export_group("Lateral")
+## Cornering grip budget (m/s²): full steer holds a curve while
+## |k|·v² <= steer_max_accel * grip, which defines v_max(k) (§6).
 @export var steer_max_accel_mps2: float = 20.0
+## Sideways speed at full steer. With steer_response_s this sets how snappy
+## steering feels, independently of the cornering limit.
+@export var steer_lateral_speed_mps: float = 8.0
+## Time constant for sideways speed to reach its target.
+@export var steer_response_s: float = 0.07
 ## Below this speed steering authority ramps down, so a parked car can't slide.
 @export var steer_full_authority_speed_mps: float = 8.0
 @export var grip: float = 1.0
-@export var lateral_damping_per_s: float = 4.0
 @export var lateral_speed_cap_mps: float = 18.0
 
 @export_group("Off-road")

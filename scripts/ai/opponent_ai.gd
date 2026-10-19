@@ -19,8 +19,8 @@ const FOLLOW_GAP_M := 12.0
 const CLEAR_BEHIND_M := 6.0
 const LANE_CLEARANCE_M := 0.4
 const PASS_COOLDOWN_S := 3.0
-const STEER_GAIN_PER_M := 0.35
-const STEER_DAMPING_S := 0.25
+const STEER_GAIN_PER_M := 0.5
+const STEER_DAMPING_S := 0.03
 
 var sim: RaceSimulation
 var car: int

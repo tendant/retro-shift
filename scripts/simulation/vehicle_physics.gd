@@ -49,14 +49,18 @@ static func step(state: VehicleState, input: DrivingInput, params: VehicleParams
 		new_speed = maxf(minf(new_speed, speed - params.overcap_decel_mps2 * dt), cap)
 	speed = maxf(new_speed, 0.0)
 
-	# Lateral: the road bends under a forward-moving car, pushing it outward.
+	# Lateral: steering sets a target sideways speed, reached quickly. The road
+	# bending under a forward-moving car adds an outward drift that full steer
+	# exactly cancels at v_max(k), so the cornering limit is unchanged.
 	var grip := params.grip * (params.off_road_grip_mult if off_road else 1.0)
 	var authority := clampf(speed / params.steer_full_authority_speed_mps, 0.0, 1.0)
-	var steer_accel := clampf(input.steer, -1.0, 1.0) * params.steer_max_accel_mps2 * authority * grip
-	var curve_accel := -track.curvature_at(state.s_m) * speed * speed
-	var lateral_accel := steer_accel + curve_accel - params.lateral_damping_per_s * state.lateral_speed_mps
+	var steer_speed := clampf(input.steer, -1.0, 1.0) * params.steer_lateral_speed_mps * authority
+	var curve_push := track.curvature_at(state.s_m) * speed * speed / (params.steer_max_accel_mps2 * grip)
+	var drift := -curve_push * params.steer_lateral_speed_mps
+	var target := steer_speed + drift
+	var blend := 1.0 - exp(-dt / params.steer_response_s)
 	var lat_cap := params.lateral_speed_cap_mps
-	state.lateral_speed_mps = clampf(state.lateral_speed_mps + lateral_accel * dt, -lat_cap, lat_cap)
+	state.lateral_speed_mps = clampf(lerpf(state.lateral_speed_mps, target, blend), -lat_cap, lat_cap)
 
 	state.x_m += state.lateral_speed_mps * dt
 	var x_limit := half_width + params.off_road_limit_m

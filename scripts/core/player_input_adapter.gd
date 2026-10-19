@@ -3,7 +3,7 @@ extends RefCounted
 ## Maps keyboard/gamepad actions into DrivingInput. Read once per physics tick.
 
 ## Steering slews toward the target so digital keys don't snap to full lock.
-const STEER_RATE_PER_S := 7.0
+const STEER_RATE_PER_S := 12.0
 
 var _steer: float = 0.0
 

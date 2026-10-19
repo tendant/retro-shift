@@ -117,3 +117,26 @@ func test_nitro_is_limited_and_raises_speed_cap() -> void:
 	for i in 300:
 		assert_false(VehiclePhysics.step(state, input, params, track, DT), "no boosts left")
 	assert_almost_eq(state.speed_mps, params.max_speed_mps, 1e-6, "decays back to the cap")
+
+
+func test_steering_is_responsive() -> void:
+	# Arcade feel: a 3 m lane change at 40 m/s well under half a second of
+	# full steer, and the car stops drifting right fast once steered left.
+	var track := _curve_track(0.0)
+	var params := VehicleParams.new()
+	var state := VehicleState.new()
+	var input := DrivingInput.new()
+	input.steer = 1.0
+	var t := 0.0
+	while state.x_m < 3.0 and t < 2.0:
+		state.speed_mps = 40.0
+		VehiclePhysics.step(state, input, params, track, DT)
+		t += DT
+	assert_lt(t, 0.5, "3 m lane change took %.2f s" % t)
+	input.steer = -1.0
+	var reverse := 0.0
+	while state.lateral_speed_mps > 0.0 and reverse < 1.0:
+		state.speed_mps = 40.0
+		VehiclePhysics.step(state, input, params, track, DT)
+		reverse += DT
+	assert_lt(reverse, 0.15, "reversing took %.2f s" % reverse)
