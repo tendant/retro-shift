@@ -29,9 +29,10 @@ func _buttons(node: Node) -> Array[Button]:
 func test_garage_shows_locks_and_affordability() -> void:
 	var garage: Control = add_child_autofree(load("res://scenes/garage.tscn").instantiate())
 	var buttons := _buttons(garage)
-	var first_upgrade := Game.events.size()
+	var start := Game.events.size()
+	var first_upgrade := start + 1
 	var settings := first_upgrade + Upgrades.LINES.size()
-	assert_eq(buttons.size(), settings + 2, "events, upgrades, music + sound toggles")
+	assert_eq(buttons.size(), settings + 2, "events, start, upgrades, music + sound toggles")
 	assert_false(buttons[0].disabled, "event 1 open")
 	assert_true(buttons[1].disabled, "event 2 locked")
 	for i in range(first_upgrade, settings):
@@ -40,7 +41,16 @@ func test_garage_shows_locks_and_affordability() -> void:
 	Game.progression.award(Game.events[0], 1, 100.0)  # emits changed → refresh
 	assert_false(buttons[1].disabled, "event 2 unlocked by a win")
 	assert_string_contains(buttons[0].text, "BEST 1st")
-	var tires_button := buttons[Game.events.size() + Upgrades.LINES.find(&"tires")]
+
+	# Choosing an event selects it; only START races.
+	Game.current_event = null
+	buttons[1].pressed.emit()
+	assert_null(Game.current_event, "choosing doesn't start a race")
+	assert_string_contains(buttons[1].text, "> ")
+	assert_false(buttons[0].text.begins_with("> "), "only one event selected")
+	assert_eq(buttons[start].text, "START  %s" % Game.events[1].display_name.to_upper())
+	assert_true(buttons[start].has_focus(), "focus moves to START")
+	var tires_button := buttons[first_upgrade + Upgrades.LINES.find(&"tires")]
 	assert_false(tires_button.disabled)
 	tires_button.pressed.emit()
 	assert_eq(Game.progression.profile.level(&"tires"), 1)

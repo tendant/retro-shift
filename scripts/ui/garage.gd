@@ -1,6 +1,7 @@
 extends Control
-## Garage hub (§2 core loop): pick an unlocked event, buy upgrades, toggle
-## sound. Keyboard/gamepad navigation uses Godot's built-in ui_* actions.
+## Garage hub (§2 core loop): choose an unlocked event, then START; buy
+## upgrades; toggle sound. Choosing never starts a race by itself, so a stray
+## tap is harmless. Keyboard/gamepad navigation uses the built-in ui_* actions.
 
 const ACCENT := UiTheme.ACCENT
 const DIM := UiTheme.DIM
@@ -17,6 +18,9 @@ var _ui_theme := Theme.new()
 var _scale: int = 1
 var _credits: Label
 var _event_buttons: Array[Button] = []
+var _event_group := ButtonGroup.new()
+var _selected: EventDefinition
+var _start_button: Button
 ## {cup_id: Label} header with points and trophy.
 var _cup_labels: Dictionary = {}
 ## {line: {"level": Label, "effect": Label, "buy": Button}}
@@ -72,20 +76,41 @@ func _build() -> void:
 	_credits = _label("", TEXT)
 	box.add_child(_credits)
 
+	# Touch: finger-sized buttons need two columns to fit a landscape phone.
+	var events_box := box
+	var upgrades_box := box
+	if Game.touch_mode():
+		var columns := HBoxContainer.new()
+		columns.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		box.add_child(columns)
+		events_box = VBoxContainer.new()
+		upgrades_box = VBoxContainer.new()
+		for column in [events_box, upgrades_box]:
+			column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			columns.add_child(column)
+		_backdrop.show_car = false
+
 	for cup in Game.cups:
 		var header := _label("", DIM)
-		box.add_child(header)
+		events_box.add_child(header)
 		_cup_labels[cup.id] = header
 		for event in cup.events:
 			var button := _button()
-			button.pressed.connect(_start_event.bind(event))
-			box.add_child(button)
+			button.toggle_mode = true
+			button.button_group = _event_group
+			button.pressed.connect(_select.bind(event))
+			events_box.add_child(button)
 			_event_buttons.append(button)
+	_start_button = _button()
+	_start_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_start_button.add_theme_color_override("font_color", ACCENT)
+	_start_button.pressed.connect(func() -> void: _start_event(_selected))
+	events_box.add_child(_start_button)
 
-	box.add_child(_label("UPGRADES", DIM))
+	upgrades_box.add_child(_label("UPGRADES", DIM))
 	var grid := GridContainer.new()
 	grid.columns = 4
-	box.add_child(grid)
+	upgrades_box.add_child(grid)
 	for line in Upgrades.LINES:
 		var row := {
 			"level": _label("", ACCENT),
@@ -100,7 +125,7 @@ func _build() -> void:
 		_rows[line] = row
 
 	var settings := HBoxContainer.new()
-	box.add_child(settings)
+	upgrades_box.add_child(settings)
 	_music_button = _button()
 	_music_button.pressed.connect(_toggle.bind(Game.SETTING_MUSIC))
 	settings.add_child(_music_button)
@@ -108,10 +133,11 @@ func _build() -> void:
 	_sfx_button.pressed.connect(_toggle.bind(Game.SETTING_SFX))
 	settings.add_child(_sfx_button)
 
-	var spacer := Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	box.add_child(spacer)
-	var controls := "TAP TO CHOOSE" if Game.touch_mode() else "↑↓ SELECT   ENTER CONFIRM"
+	if not Game.touch_mode():
+		var spacer := Control.new()
+		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		box.add_child(spacer)
+	var controls := "TAP AN EVENT, THEN START" if Game.touch_mode() else "↑↓ SELECT   ENTER CONFIRM"
 	box.add_child(_label(controls + "   TOP 3 UNLOCKS THE NEXT EVENT", DIM))
 
 
@@ -130,10 +156,14 @@ func _refresh() -> void:
 			var best: Dictionary = profile.best_results.get(event.id, {})
 			var best_text := "" if best.is_empty() else "   BEST %s %s" % [
 				Hud.ordinal(best["place"]), Hud.format_time(best["time_s"])]
-			button.text = "%s%s" % [event.display_name, best_text]
+			var marker := "> " if event == _selected else "  "
+			button.text = "%s%s%s" % [marker, event.display_name, best_text]
+			button.set_pressed_no_signal(event == _selected)
 		else:
 			button.disabled = true
-			button.text = "%s  LOCKED" % event.display_name
+			button.text = "  %s  LOCKED" % event.display_name
+	_start_button.disabled = _selected == null
+	_start_button.text = "START  %s" % _selected.display_name.to_upper() if _selected else "CHOOSE AN EVENT"
 	for line: StringName in _rows:
 		var row: Dictionary = _rows[line]
 		var level := profile.level(line)
@@ -150,7 +180,15 @@ func _refresh() -> void:
 	_backdrop.queue_redraw()
 
 
+func _select(event: EventDefinition) -> void:
+	_selected = event
+	_refresh()
+	_start_button.grab_focus()
+
+
 func _start_event(event: EventDefinition) -> void:
+	if event == null:
+		return
 	_play(&"go")
 	Game.start_event(event)
 
@@ -170,9 +208,12 @@ func _play(sound: StringName) -> void:
 	_sfx.play()
 
 
+## Pre-selects the newest unlocked event and focuses it.
 func _focus_default() -> void:
 	for i in range(_event_buttons.size() - 1, -1, -1):
 		if not _event_buttons[i].disabled:
+			_selected = Game.events[i]
+			_refresh()
 			_event_buttons[i].grab_focus()
 			return
 
@@ -225,6 +266,7 @@ class Backdrop:
 		set(value):
 			pixel_scale = value
 			queue_redraw()
+	var show_car: bool = true
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -245,6 +287,9 @@ class Backdrop:
 			while x < size.x / k:
 				draw_texture(layer, Vector2(x, h - layer.get_height() + 1))
 				x += layer.get_width()
+		if not show_car:
+			draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+			return
 		# Player's car, big, bottom right.
 		var car_scale := 3.0
 		var car_size := SpriteAtlas.CAR_SIZE * car_scale

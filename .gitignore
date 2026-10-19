@@ -9,5 +9,6 @@
 # Python
 __pycache__/
 
-# Mobile builds
-build/
+# Mobile builds (the .gdignore keeps Godot from importing Xcode/Gradle output)
+build/*
+!build/.gdignore

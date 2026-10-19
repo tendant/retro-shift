@@ -41,6 +41,7 @@ static func apply(theme: Theme, scale: int) -> void:
 	theme.set_constant("h_separation", "GridContainer", 6 * scale)
 	theme.set_constant("v_separation", "GridContainer", 2 * scale)
 	theme.set_constant("separation", "HBoxContainer", 6 * scale)
+	theme.set_constant("separation", "VBoxContainer", 3 * scale)
 
 
 static func _box(fill: Color, edge: Color, scale: int) -> StyleBoxFlat:
