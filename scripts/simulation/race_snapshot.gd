@@ -5,6 +5,7 @@ extends RefCounted
 
 var tick: int = 0
 var race_time_s: float = 0.0
+var countdown_s: float = 0.0
 var car_count: int = 0
 var s_m := PackedFloat64Array()
 var x_m := PackedFloat64Array()

@@ -4,12 +4,14 @@ extends Node
 ## track switching, back to garage).
 
 const VIEW_HEIGHT := 240
+const COUNTDOWN_S := 3
 
 var _event: EventDefinition
 ## Free race (no event): dev flags and F2 track cycling.
 var _free_race: bool = false
 var _track_index: int = 0
 var _autodrive: bool = false
+var _audio: RaceAudio
 
 @onready var _sim: RaceSimulation = $RaceSimulation
 @onready var _view: SubViewport = $GameView
@@ -25,6 +27,8 @@ func _ready() -> void:
 	get_window().size_changed.connect(_fit_view)
 	_fit_view()
 	_sim.results_ready.connect(_on_results_ready)
+	_audio = RaceAudio.new()
+	add_child(_audio)
 	_autodrive = OS.get_cmdline_user_args().has("--autodrive")
 	_renderer.debug_enabled = OS.get_cmdline_user_args().has("--debug")
 
@@ -78,6 +82,9 @@ func _start_race() -> void:
 	_renderer.sim = _sim
 	_renderer.reset_camera()
 	_hud.sim = _sim
+	_audio.sim = _sim
+	Game.play_music(&"race")
+	_sim.start_countdown(COUNTDOWN_S)
 
 
 func _on_results_ready() -> void:

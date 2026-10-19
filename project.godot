@@ -28,6 +28,10 @@ window/size/viewport_height=960
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
 
+[gui]
+
+theme/custom_font="res://assets/fonts/retroshift_5x7.fnt"
+
 [physics]
 
 common/physics_ticks_per_second=60

@@ -73,3 +73,20 @@ func test_invalid_track_is_rejected() -> void:
 	assert_gt(errors.size(), 0)
 	assert_null(sim.track)
 	assert_push_error("track has no segments")
+
+
+func test_countdown_holds_the_field_then_beats_to_go() -> void:
+	var sim := _sim(&"straight", FullThrottle.new(), 3)
+	watch_signals(sim)
+	var grid := sim.cars[0].s_m
+	sim.start_countdown(3)
+	for i in 3 * 60 - 1:
+		sim.tick()
+	assert_eq(sim.cars[0].s_m, grid, "held during countdown")
+	assert_eq(sim.race_time_s, 0.0, "clock stopped")
+	sim.tick()
+	assert_eq(sim.countdown_s, 0.0)
+	assert_signal_emit_count(sim, "countdown_beat", 4)
+	assert_signal_emitted_with_parameters(sim, "countdown_beat", [0])
+	sim.tick()
+	assert_gt(sim.cars[0].s_m, grid, "racing after GO")

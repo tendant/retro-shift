@@ -7,31 +7,31 @@ extends Node2D
 ## paint over whatever lies beyond a crest, so no clipping buffer is needed.
 ## Reads only the interpolated snapshot; never advances the simulation.
 
-const SKY_TOP := Color8(56, 104, 200)
-const SKY_HORIZON := Color8(150, 196, 240)
-const HILLS_FAR := Color8(92, 120, 168)
-const HILLS_NEAR := Color8(64, 128, 88)
-const GRASS := [Color8(56, 152, 56), Color8(48, 136, 48)]
-const RUMBLE := [Color8(232, 232, 232), Color8(200, 40, 40)]
-const ROAD := [Color8(104, 104, 112), Color8(96, 96, 104)]
-const LANE := Color8(236, 236, 236)
-const TREE_TRUNK := Color8(96, 64, 32)
-const TREE_LEAVES := Color8(24, 104, 40)
-const POST := Color8(240, 240, 240)
-const POST_BAND := Color8(32, 32, 32)
-const PLAYER_BODY := Color8(220, 40, 40)
-const AI_BODIES := [Color8(40, 96, 220), Color8(240, 200, 40), Color8(40, 176, 96),
-		Color8(232, 120, 32), Color8(160, 64, 200), Color8(232, 232, 232)]
-const CAR_GLASS := Color8(40, 48, 72)
-const CAR_TYRE := Color8(24, 24, 24)
-const CAR_LIGHT := Color8(255, 200, 64)
-const SHADOW := Color(0, 0, 0, 0.35)
+const SKY_TOP := Color8(48, 88, 192)
+const SKY_HORIZON := Color8(168, 204, 244)
+const SKY_BANDS := 8
+const GRASS := [Color8(64, 156, 64), Color8(54, 140, 56)]
+const RUMBLE := [Color8(236, 236, 236), Color8(206, 44, 44)]
+const ROAD := [Color8(108, 108, 118), Color8(100, 100, 110)]
+const LANE := Color8(240, 240, 240)
+const FLAME := [Color8(255, 236, 140), Color8(255, 150, 40), Color8(120, 200, 255)]
 const DEBUG := Color8(255, 240, 0)
 const DEBUG_EDGE := Color8(0, 255, 255)
 
-const CAR_WIDTH_M := 1.8
-const CAR_HEIGHT_M := 1.1
+## World width of the car sprite (48 px, including shadow).
+const CAR_WIDTH_M := 2.0
+## Scenery texel density: 8 px per meter (a 32 px pine is 4 m wide).
+const SCENERY_PX_PER_M := 8.0
 const RUMBLE_WIDTH_FRAC := 0.12
+const TREE_KINDS := [&"pine_a", &"pine_a", &"pine_b", &"pine_b", &"pine_a", &"bush", &"bush", &"rock"]
+const BILLBOARDS := [&"billboard_retroshift", &"billboard_nitro", &"billboard_upgrade"]
+## Chevron signs mark curves at least this tight.
+const CHEVRON_MIN_CURVATURE := 1.0 / 130.0
+const CHEVRON_SPACING_M := 15.0
+const GANTRY_HEIGHT_M := 7.0
+## Sprites wider than this many view widths are skipped. Huge draw rects
+## from items brushing past the camera distort the whole frame.
+const MAX_SPRITE_VIEW_WIDTHS := 4.0
 const LANE_HALF_WIDTH_M := 0.12
 
 @export var steps: int = 240
@@ -42,7 +42,7 @@ const LANE_HALF_WIDTH_M := 0.12
 ## Exponential follow rate (1/s) of the camera's lateral position.
 @export var cam_lateral_follow_rate: float = 10.0
 @export var stripe_len_m: float = 6.0
-@export var scenery_spacing_m: float = 24.0
+@export var scenery_spacing_m: float = 12.0
 @export var parallax_px_per_rad: float = 160.0
 
 var sim: RaceSimulation
@@ -55,10 +55,10 @@ var _font: Font
 var _car_s := PackedFloat64Array()
 var _car_x := PackedFloat64Array()
 var _car_steer := PackedFloat64Array()
+var _car_boost := PackedByteArray()
 var _car_strip := PackedInt32Array()
 # Scratch buffers reused for every primitive to avoid per-frame allocation.
 var _quad := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
-var _tri := PackedVector2Array([Vector2.ZERO, Vector2.ZERO, Vector2.ZERO])
 var _color := PackedColorArray([Color.WHITE])
 var _no_uvs := PackedVector2Array()
 
@@ -66,7 +66,7 @@ var _no_uvs := PackedVector2Array()
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_projector = RoadProjector.new(steps, step_len_m)
-	_font = ThemeDB.fallback_font
+	_font = Game.FONT
 
 
 func reset_camera() -> void:
@@ -99,11 +99,13 @@ func _interpolate(alpha: float) -> void:
 		_car_s.resize(n)
 		_car_x.resize(n)
 		_car_steer.resize(n)
+		_car_boost.resize(n)
 		_car_strip.resize(n)
 	for i in n:
 		_car_s[i] = lerpf(prev.s_m[i], curr.s_m[i], alpha)
 		_car_x[i] = lerpf(prev.x_m[i], curr.x_m[i], alpha)
 		_car_steer[i] = curr.steer[i]
+		_car_boost[i] = curr.nitro_active[i]
 
 
 func _draw() -> void:
@@ -122,29 +124,25 @@ func _draw() -> void:
 
 func _draw_background(view: Vector2) -> void:
 	var horizon := _projector.center.y
-	draw_rect(Rect2(0, 0, view.x, horizon * 0.5), SKY_TOP)
-	draw_rect(Rect2(0, horizon * 0.5, view.x, horizon * 0.5), SKY_TOP.lerp(SKY_HORIZON, 0.5))
-	draw_rect(Rect2(0, horizon * 0.8, view.x, horizon * 0.2), SKY_HORIZON)
-	_draw_hills(view, horizon, 0.5, 96.0, 22.0, HILLS_FAR)
-	_draw_hills(view, horizon, 1.0, 64.0, 12.0, HILLS_NEAR)
+	var band_h := ceilf(horizon / SKY_BANDS)
+	for b in SKY_BANDS:
+		var color := SKY_TOP.lerp(SKY_HORIZON, float(b) / (SKY_BANDS - 1))
+		draw_rect(Rect2(0, b * band_h, view.x, band_h), color)
+	_draw_layer(SpriteAtlas.BG_CLOUDS, view, horizon - 70.0, 0.3)
+	_draw_layer(SpriteAtlas.BG_MOUNTAINS, view, horizon + 1.0, 0.5)
+	_draw_layer(SpriteAtlas.BG_HILLS, view, horizon + 1.0, 1.0)
 	draw_rect(Rect2(0, horizon, view.x, view.y - horizon), GRASS[1])
 
 
-## Repeating mounds scrolled by camera heading; `depth` < 1 scrolls slower.
-func _draw_hills(view: Vector2, horizon: float, depth: float, period: float, height: float,
-		color: Color) -> void:
-	var offset := fposmod(-_projector.cam_heading * parallax_px_per_rad * depth, period)
-	var x := offset - period
-	var k := 0
-	while x < view.x + period:
-		var h := height * (0.6 + 0.4 * absf(sin(float(k) * 1.7 + depth)))
-		_tri[0] = Vector2(x - period * 0.6, horizon)
-		_tri[1] = Vector2(x, horizon - h)
-		_tri[2] = Vector2(x + period * 0.6, horizon)
-		_color[0] = color
-		draw_primitive(_tri, _color, _no_uvs)
-		x += period
-		k += 1
+## Tiles a parallax strip whose bottom sits at `bottom_y`; `depth` < 1
+## scrolls slower with the camera heading.
+func _draw_layer(texture: Texture2D, view: Vector2, bottom_y: float, depth: float) -> void:
+	var w := float(texture.get_width())
+	var x := fposmod(-_projector.cam_heading * parallax_px_per_rad * depth, w) - w
+	var y := roundf(bottom_y - texture.get_height())
+	while x < view.x:
+		draw_texture(texture, Vector2(roundf(x), y))
+		x += w
 
 
 ## Draws terrain band and road for strip [i, i + 1]. Returns false if the
@@ -184,23 +182,74 @@ func _draw_road_quad(i: int, lat_a: float, lat_b: float, color: Color) -> void:
 
 func _draw_scenery_on_strip(i: int) -> void:
 	var p := _projector
-	var n := ceili(p.s_m[i] / scenery_spacing_m)
-	var s := n * scenery_spacing_m
-	if s >= p.s_m[i + 1]:
+	var s0 := p.s_m[i]
+	var s1 := p.s_m[i + 1]
+	var track := sim.track
+	var lap := track.lap_length_m
+
+	# Start/finish gantry spanning the road.
+	var line_s := ceilf(s0 / lap) * lap
+	if line_s < s1:
+		_draw_gantry(line_s, track.half_width_at(line_s))
+
+	# Chevrons on the outside of tight curves, pointing where the road goes.
+	var n := ceili(s0 / CHEVRON_SPACING_M)
+	while n * CHEVRON_SPACING_M < s1:
+		var s := n * CHEVRON_SPACING_M
+		var k := track.curvature_at(s)
+		if absf(k) >= CHEVRON_MIN_CURVATURE:
+			var outside := -signf(k)
+			var rumble := track.half_width_at(s) * (1.0 + RUMBLE_WIDTH_FRAC)
+			var sign_name: StringName = &"chevron_right" if k > 0.0 else &"chevron_left"
+			_draw_scenery(sign_name, p.project_on_road(s, outside * (rumble + 1.2)))
+		n += 1
+
+	# Roadside dressing by segment theme.
+	n = ceili(s0 / scenery_spacing_m)
+	while n * scenery_spacing_m < s1:
+		var s := n * scenery_spacing_m
+		var seg := track.segment_at(s)
+		var rumble := seg.road_half_width_m * (1.0 + RUMBLE_WIDTH_FRAC)
+		var h := _hash(n)
+		var side := 1.0 if posmod(n, 2) == 0 else -1.0
+		match seg.scenery_id:
+			&"trees":
+				var kind: StringName = TREE_KINDS[h % TREE_KINDS.size()]
+				var lateral := side * (rumble + 3.0 + float(h % 7))
+				_draw_scenery(kind, p.project_on_road(s, lateral))
+			&"posts":
+				if posmod(n, 2) == 0:
+					_draw_scenery(&"post", p.project_on_road(s, rumble + 0.8))
+					_draw_scenery(&"post", p.project_on_road(s, -rumble - 0.8))
+				if posmod(n, 9) == 3:
+					var board: StringName = BILLBOARDS[h % BILLBOARDS.size()]
+					_draw_scenery(board, p.project_on_road(s, side * (rumble + 7.0)))
+		n += 1
+
+
+func _draw_gantry(s: float, half_width: float) -> void:
+	var p := _projector
+	var reach := half_width * (1.0 + RUMBLE_WIDTH_FRAC) + 0.6
+	var left := p.project_on_road(s, -reach)
+	var right := p.project_on_road(s, reach)
+	if left.z <= 0.0 or right.z <= 0.0:
 		return
-	var seg := sim.track.segment_at(s)
-	if seg.scenery_id == &"" or seg.scenery_id == &"none":
+	_draw_scenery(&"gantry_pillar", left)
+	_draw_scenery(&"gantry_pillar", right)
+	var banner: Rect2 = SpriteAtlas.SCENERY_RECTS[&"gantry_banner"]
+	var top := left.y - GANTRY_HEIGHT_M * left.z
+	var height := banner.size.y / SCENERY_PX_PER_M * left.z
+	var x0 := roundf(left.x)
+	var y0 := roundf(top)
+	draw_texture_rect_region(SpriteAtlas.SCENERY, Rect2(x0, y0, roundf(right.x) - x0,
+			maxf(1.0, roundf(top + height) - y0)), banner)
+
+
+func _draw_scenery(sprite: StringName, base: Vector3) -> void:
+	if base.z <= 0.0:
 		return
-	var side := 1.0 if posmod(n, 2) == 0 else -1.0
-	var lateral := side * (seg.road_half_width_m * (1.0 + RUMBLE_WIDTH_FRAC) + 2.0 + posmod(n, 3))
-	var base := p.project_on_road(s, lateral)
-	if base.z < 0.1:
-		return
-	match seg.scenery_id:
-		&"trees":
-			_draw_tree(base)
-		&"posts":
-			_draw_post(base)
+	var region: Rect2 = SpriteAtlas.SCENERY_RECTS[sprite]
+	_sprite(SpriteAtlas.SCENERY, region, base, region.size.x / SCENERY_PX_PER_M)
 
 
 ## Draws cars standing on strip `i`, farthest first.
@@ -216,54 +265,54 @@ func _draw_cars_on_strip(i: int) -> void:
 		drawn_s = _car_s[next]
 		var base := _projector.project_on_road(_car_s[next], _car_x[next])
 		if base.z > 0.0:
-			var body: Color = PLAYER_BODY if next == RaceSimulation.PLAYER else AI_BODIES[(next - 1) % AI_BODIES.size()]
-			_draw_car(base, _car_steer[next], body)
+			var color_row := 0 if next == RaceSimulation.PLAYER else 1 + (next - 1) % (SpriteAtlas.CAR_COLORS - 1)
+			_draw_car(base, _car_steer[next], color_row, _car_boost[next] != 0)
 
 
-# --- Placeholder sprites (procedural until Milestone 5 art) ---------------
-
-func _draw_tree(base: Vector3) -> void:
-	var m := base.z
-	_rect(base.x - 0.3 * m, base.y - 2.0 * m, 0.6 * m, 2.0 * m, TREE_TRUNK)
-	_tri[0] = Vector2(roundf(base.x - 2.0 * m), roundf(base.y - 1.5 * m))
-	_tri[1] = Vector2(roundf(base.x), roundf(base.y - 7.0 * m))
-	_tri[2] = Vector2(roundf(base.x + 2.0 * m), roundf(base.y - 1.5 * m))
-	_color[0] = TREE_LEAVES
-	draw_primitive(_tri, _color, _no_uvs)
-
-
-func _draw_post(base: Vector3) -> void:
-	var m := base.z
-	_rect(base.x - 0.15 * m, base.y - 2.5 * m, 0.3 * m, 2.5 * m, POST)
-	_rect(base.x - 0.15 * m, base.y - 2.5 * m, 0.3 * m, 0.4 * m, POST_BAND)
+## Rear view with hard-left/left/center/right/hard-right frames (§5).
+func _draw_car(base: Vector3, steer: float, color_row: int, boosting: bool) -> void:
+	var frame := 2
+	if absf(steer) > 0.7:
+		frame = 2 + 2 * int(signf(steer))
+	elif absf(steer) > 0.25:
+		frame = 2 + int(signf(steer))
+	var rect := _sprite(SpriteAtlas.CARS, SpriteAtlas.car_rect(color_row, frame), base, CAR_WIDTH_M)
+	if boosting and rect.size.x >= 8.0:
+		_draw_flames(rect)
 
 
-## Rear view of a car with left/center/right turning frames (§5).
-func _draw_car(base: Vector3, steer: float, body: Color) -> void:
-	var m := base.z
-	var w := CAR_WIDTH_M * m
-	var h := CAR_HEIGHT_M * m
-	var frame := 0.0 if absf(steer) < 0.3 else signf(steer)
-	var left := base.x - w * 0.5
-	var top := base.y - h
-	_rect(left - 0.05 * w, base.y - 0.1 * h, w * 1.1, 0.16 * h, SHADOW)
-	_rect(left, base.y - 0.3 * h, 0.2 * w, 0.3 * h, CAR_TYRE)
-	_rect(left + 0.8 * w, base.y - 0.3 * h, 0.2 * w, 0.3 * h, CAR_TYRE)
-	_rect(left, top + 0.4 * h, w, 0.45 * h, body)
-	var cabin_shift := frame * 0.1 * w
-	_rect(left + 0.15 * w + cabin_shift, top, 0.7 * w, 0.42 * h, body.darkened(0.2))
-	_rect(left + 0.22 * w + cabin_shift, top + 0.08 * h, 0.56 * w, 0.26 * h, CAR_GLASS)
-	_rect(left + 0.06 * w, top + 0.5 * h, 0.16 * w, 0.12 * h, CAR_LIGHT)
-	_rect(left + 0.78 * w, top + 0.5 * h, 0.16 * w, 0.12 * h, CAR_LIGHT)
+## Flickering exhaust flames under the bumper while a nitro boost runs.
+func _draw_flames(car_rect: Rect2) -> void:
+	var px := car_rect.size.x / SpriteAtlas.CAR_SIZE.x
+	var flicker := (sim.tick_count / 3) % 2
+	for exhaust_x: float in [15.5, 32.5]:
+		var cx := car_rect.position.x + exhaust_x * px
+		var cy := car_rect.position.y + 22.0 * px
+		var r := (2.0 + flicker) * px
+		draw_rect(Rect2(roundf(cx - r), roundf(cy - r * 0.6), roundf(2 * r), roundf(r * 1.4)), FLAME[2])
+		draw_rect(Rect2(roundf(cx - r * 0.6), roundf(cy - r * 0.4), roundf(1.2 * r), roundf(r)), FLAME[1])
+		draw_rect(Rect2(roundf(cx - r * 0.3), roundf(cy - r * 0.2), maxf(1.0, roundf(0.6 * r)),
+				maxf(1.0, roundf(r * 0.5))), FLAME[0])
 
 
-## Integer-snapped rect so scaled sprites stay crisp.
-func _rect(x: float, y: float, w: float, h: float, color: Color) -> void:
-	var x0 := roundf(x)
-	var y0 := roundf(y)
-	var rw := maxf(1.0, roundf(x + w) - x0)
-	var rh := maxf(1.0, roundf(y + h) - y0)
-	draw_rect(Rect2(x0, y0, rw, rh), color)
+## Draws `region` of `texture` standing on `base` (bottom-center), `width_m`
+## wide in the world, with integer-snapped edges. Returns the screen rect.
+func _sprite(texture: Texture2D, region: Rect2, base: Vector3, width_m: float) -> Rect2:
+	var w := width_m * base.z
+	# Too small to see, or so close it's effectively at the camera.
+	if w < 1.0 or w > MAX_SPRITE_VIEW_WIDTHS * get_viewport_rect().size.x:
+		return Rect2()
+	var h := w * region.size.y / region.size.x
+	var x0 := roundf(base.x - w * 0.5)
+	var y0 := roundf(base.y - h)
+	var rect := Rect2(x0, y0, maxf(1.0, roundf(base.x + w * 0.5) - x0), maxf(1.0, roundf(base.y) - y0))
+	draw_texture_rect_region(texture, rect, region)
+	return rect
+
+
+## Cheap deterministic hash so scenery choices are stable per position.
+static func _hash(n: int) -> int:
+	return absi((n * 73856093) ^ ((n * 19349663) >> 3)) % 1000003
 
 
 # --- Debug overlay ---------------------------------------------------------

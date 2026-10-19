@@ -59,6 +59,11 @@ func award(event: EventDefinition, place: int, time_s: float) -> Dictionary:
 	return {"credits": credits, "unlocked": unlocked, "new_best": new_best}
 
 
+## Saves profile changes made directly (e.g. settings).
+func save() -> void:
+	_commit()
+
+
 func player_params() -> VehicleParams:
 	return Upgrades.apply(base_params, profile.upgrades)
 

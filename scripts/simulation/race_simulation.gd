@@ -11,8 +11,11 @@ signal nitro_fired(car: int)
 signal collided(rear_car: int, front_car: int)
 ## The player finished; `result_order` and `result_time_s` are now frozen.
 signal results_ready
+## Start countdown: 3, 2, 1, then 0 for GO.
+signal countdown_beat(count: int)
 
-const TICK_DT := 1.0 / 60.0
+const TICKS_PER_SECOND := 60
+const TICK_DT := 1.0 / TICKS_PER_SECOND
 const PLAYER := 0
 ## Grid slots sit behind the line, so lap 1 begins as each car crosses s = 0.
 ## Opponents fill the front slots; the player starts last.
@@ -56,7 +59,10 @@ var result_time_s := PackedFloat64Array()
 var result_projected := PackedByteArray()
 var tick_count: int = 0
 var race_time_s: float = 0.0
+## Seconds left before GO; cars are held and the clock is stopped meanwhile.
+var countdown_s: float = 0.0
 
+var _countdown_ticks: int = 0
 var _finished := PackedByteArray()
 var _finish_rank := PackedInt32Array()
 var _finished_count: int = 0
@@ -80,6 +86,8 @@ func setup(p_track: Track, p_params: VehicleParams, player_input: Object = null,
 	params = p_params
 	tick_count = 0
 	race_time_s = 0.0
+	countdown_s = 0.0
+	_countdown_ticks = 0
 	_finished_count = 0
 	_results_frozen = false
 	cars.clear()
@@ -124,12 +132,22 @@ func set_input_source(car: int, source: Object) -> void:
 	input_sources[car] = source
 
 
+## Holds the field for `seconds` (whole seconds), beating once per second.
+func start_countdown(seconds: int) -> void:
+	_countdown_ticks = seconds * TICKS_PER_SECOND
+	countdown_s = seconds
+	countdown_beat.emit(seconds)
+
+
 func _physics_process(_delta: float) -> void:
 	if track != null:
 		tick()
 
 
 func tick() -> void:
+	if _countdown_ticks > 0:
+		_tick_countdown()
+		return
 	race_time_s += TICK_DT
 	for i in cars.size():
 		if input_sources[i] != null:
@@ -159,7 +177,21 @@ func tick() -> void:
 	if _finished[PLAYER] and not _results_frozen:
 		_freeze_results()
 	tick_count += 1
+	_publish_snapshot()
 
+
+func _tick_countdown() -> void:
+	var shown := ceili(float(_countdown_ticks) / TICKS_PER_SECOND)
+	_countdown_ticks -= 1
+	countdown_s = _countdown_ticks * TICK_DT
+	var now := ceili(float(_countdown_ticks) / TICKS_PER_SECOND)
+	if now < shown:
+		countdown_beat.emit(now)
+	tick_count += 1
+	_publish_snapshot()
+
+
+func _publish_snapshot() -> void:
 	var older := _prev
 	_prev = _curr
 	_curr = older
@@ -300,6 +332,7 @@ func _freeze_results() -> void:
 func _write_snapshot(snap: RaceSnapshot) -> void:
 	snap.tick = tick_count
 	snap.race_time_s = race_time_s
+	snap.countdown_s = countdown_s
 	for i in cars.size():
 		var state := cars[i]
 		snap.s_m[i] = state.s_m

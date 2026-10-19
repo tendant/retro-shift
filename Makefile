@@ -6,7 +6,7 @@ OPPONENTS ?= 5
 GAME_ARGS = --track=$(TRACK) --opponents=$(OPPONENTS)
 
 .DEFAULT_GOAL := help
-.PHONY: help run race autodrive debug import test clean
+.PHONY: help run race autodrive debug assets import test clean
 
 help: ## Show this help
 	@echo "Usage: make <target> [TRACK=name] [OPPONENTS=0-5] [GODOT=path]"
@@ -27,6 +27,12 @@ autodrive: ## Watch the autopilot drive TRACK
 
 debug: ## Autopilot on TRACK with the debug overlay
 	$(GODOT) --path . -- $(GAME_ARGS) --autodrive --debug
+
+assets: ## Regenerate font, sprites and audio from tools/assets/
+	python3 tools/assets/gen_font.py
+	python3 tools/assets/gen_sprites.py
+	python3 tools/assets/gen_audio.py
+	$(GODOT) --headless --import
 
 import: ## Re-import assets and refresh the script class cache
 	$(GODOT) --headless --import

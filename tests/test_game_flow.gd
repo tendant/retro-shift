@@ -13,6 +13,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	Game.stop_music()
 	Game.progression = _saved_progression
 	Game.current_event = _saved_event
 	get_tree().paused = false
@@ -28,15 +29,17 @@ func _buttons(node: Node) -> Array[Button]:
 func test_garage_shows_locks_and_affordability() -> void:
 	var garage: Control = add_child_autofree(load("res://scenes/garage.tscn").instantiate())
 	var buttons := _buttons(garage)
-	assert_eq(buttons.size(), Game.events.size() + Upgrades.LINES.size())
+	var first_upgrade := Game.events.size()
+	var settings := first_upgrade + Upgrades.LINES.size()
+	assert_eq(buttons.size(), settings + 2, "events, upgrades, music + sound toggles")
 	assert_false(buttons[0].disabled, "event 1 open")
 	assert_true(buttons[1].disabled, "event 2 locked")
-	for i in range(Game.events.size(), buttons.size()):
+	for i in range(first_upgrade, settings):
 		assert_true(buttons[i].disabled, "can't afford anything with 0 credits")
 
 	Game.progression.award(Game.events[0], 1, 100.0)  # emits changed → refresh
 	assert_false(buttons[1].disabled, "event 2 unlocked by a win")
-	assert_string_contains(buttons[0].text, "best: 1st")
+	assert_string_contains(buttons[0].text, "BEST 1st")
 	var tires_button := buttons[Game.events.size() + Upgrades.LINES.find(&"tires")]
 	assert_false(tires_button.disabled)
 	tires_button.pressed.emit()
@@ -53,6 +56,9 @@ func test_event_race_awards_credits_on_finish() -> void:
 	assert_eq(sim.track.laps, Game.events[0].laps)
 	assert_eq(sim.car_params[0].nitro_count, 3)
 
+	assert_gt(sim.countdown_s, 0.0, "race opens with a countdown")
+	while sim.countdown_s > 0.0:
+		sim.tick()
 	var race_end := sim.track.laps * sim.track.lap_length_m
 	sim.cars[0].s_m = race_end - 0.5
 	sim.cars[0].speed_mps = 60.0
