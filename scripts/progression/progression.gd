@@ -101,12 +101,34 @@ func award(event: EventDefinition, place: int, time_s: float, cup: CupDefinition
 			profile.trophies[cup.id] = earned
 			profile.credits += bonus
 			trophy = earned
-			if had == 0 and cup.unlocks != &"" and not profile.is_unlocked(cup.unlocks):
-				profile.unlocked_events.append(cup.unlocks)
-				unlocked = cup.unlocks
+		if earned > 0 and cup.unlocks != &"" and not profile.is_unlocked(cup.unlocks):
+			profile.unlocked_events.append(cup.unlocks)
+			unlocked = cup.unlocks
 	_commit()
 	return {"credits": credits, "unlocked": unlocked, "new_best": new_best,
 			"trophy": trophy, "trophy_bonus": bonus}
+
+
+## Re-derives unlocks from saved results, so content added after a save was
+## made (a new cup, a new event) opens for players who already earned it.
+## Returns the newly unlocked event ids.
+func sync_unlocks(cups: Array[CupDefinition]) -> Array[StringName]:
+	var added: Array[StringName] = []
+	for cup in cups:
+		var targets: Array[StringName] = []
+		for event in cup.events:
+			var best: Dictionary = profile.best_results.get(event.id, {})
+			if not best.is_empty() and best["place"] <= UNLOCK_PLACE:
+				targets.append(event.unlocks)
+		if trophy_for(cup) > 0:
+			targets.append(cup.unlocks)
+		for id in targets:
+			if id != &"" and not profile.is_unlocked(id):
+				profile.unlocked_events.append(id)
+				added.append(id)
+	if not added.is_empty():
+		_commit()
+	return added
 
 
 ## Saves profile changes made directly (e.g. settings).

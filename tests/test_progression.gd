@@ -85,6 +85,29 @@ func test_trophies_need_top_three_everywhere_then_points() -> void:
 	assert_eq(result.trophy_bonus, 0)
 
 
+## A trophy (or podium) saved before the content it unlocks existed: the new
+## cup opens on load and on the next finish, without re-earning anything.
+func test_unlocks_added_after_save_are_granted() -> void:
+	var progression := Progression.new(SaveService.new(MemorySaveStorage.new()))
+	var a := _event(&"a")
+	var b := _event(&"b")
+	var cup := _cup([a, b])
+	cup.unlocks = &""
+	progression.award(a, 1, 100.0, cup)
+	progression.award(b, 1, 100.0, cup)
+	assert_gt(progression.trophy_for(cup), 0, "trophy earned while it unlocked nothing")
+	cup.unlocks = &"next_cup_1"
+	a.unlocks = &"a_next"
+	var added := progression.sync_unlocks([cup] as Array[CupDefinition])
+	assert_eq(added, [&"a_next", &"next_cup_1"] as Array[StringName])
+	assert_true(progression.profile.is_unlocked(&"next_cup_1"))
+	assert_eq(progression.sync_unlocks([cup] as Array[CupDefinition]), [] as Array[StringName], "idempotent")
+
+	cup.unlocks = &"next_cup_2"
+	var result := progression.award(b, 1, 90.0, cup)
+	assert_eq(result.unlocked, &"next_cup_2", "winning again also grants it")
+
+
 func test_fourth_place_anywhere_blocks_the_trophy() -> void:
 	var progression := Progression.new(SaveService.new(MemorySaveStorage.new()))
 	var a := _event(&"a")

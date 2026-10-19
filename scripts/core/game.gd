@@ -37,6 +37,7 @@ func _ready() -> void:
 		cups.append(cup)
 		events.append_array(cup.events)
 	progression = Progression.new(SaveService.new(FileSaveStorage.new()))
+	progression.sync_unlocks(cups)
 	_setup_audio()
 	get_tree().auto_accept_quit = false
 	for arg in OS.get_cmdline_user_args():
