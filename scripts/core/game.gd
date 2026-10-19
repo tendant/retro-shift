@@ -96,6 +96,11 @@ func go_to_garage() -> void:
 	_change_scene(GARAGE_SCENE)
 
 
+## Touch UI: real touchscreen, or --touch to try it on desktop with a mouse.
+func touch_mode() -> bool:
+	return DisplayServer.is_touchscreen_available() or OS.get_cmdline_user_args().has("--touch")
+
+
 func play_music(music_name: StringName) -> void:
 	if music_name == _music_name and _music_player.playing:
 		return

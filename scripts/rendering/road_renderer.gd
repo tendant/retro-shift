@@ -50,6 +50,9 @@ var debug_enabled: bool = false
 
 var _projector: RoadProjector
 var _cam_x: float = 0.0
+## Smoothed CPU time (ms) of build + draw, shown in the debug overlay.
+var _cpu_ms: float = 0.0
+var _frame_start_us: int = 0
 var _font: Font
 # Interpolated car state for this frame, plus the strip each car stands on.
 var _car_s := PackedFloat64Array()
@@ -76,6 +79,7 @@ func reset_camera() -> void:
 func _process(delta: float) -> void:
 	if sim == null or sim.track == null:
 		return
+	_frame_start_us = Time.get_ticks_usec()
 	var alpha := 1.0 if get_tree().paused else Engine.get_physics_interpolation_fraction()
 	_interpolate(alpha)
 	_cam_x = lerpf(_cam_x, _car_x[RaceSimulation.PLAYER], 1.0 - exp(-cam_lateral_follow_rate * delta))
@@ -112,12 +116,17 @@ func _draw() -> void:
 	if sim == null or sim.track == null or _car_s.is_empty():
 		return
 	var view := get_viewport_rect().size
+	var draw_start_us := Time.get_ticks_usec()
 	_draw_background(view)
 	for i in range(_projector.count - 2, -1, -1):
 		if _draw_strip(i, view):
 			_draw_scenery_on_strip(i)
 		# Cars are drawn even on hidden strips; nearer strips paint over them.
 		_draw_cars_on_strip(i)
+	# Build (in _process) plus draw; excludes time between the two.
+	var build_us := 0 if _frame_start_us == 0 else draw_start_us - _frame_start_us
+	var frame_ms := (build_us + Time.get_ticks_usec() - draw_start_us) / 1000.0
+	_cpu_ms = lerpf(_cpu_ms, frame_ms, 0.05)
 	if debug_enabled:
 		_draw_debug()
 
@@ -342,7 +351,7 @@ func _draw_debug() -> void:
 	var car := sim.cars[RaceSimulation.PLAYER]
 	var k := track.curvature_at(car.s_m)
 	var lines := PackedStringArray([
-		"fps %d  tick %d" % [Engine.get_frames_per_second(), sim.tick_count],
+		"fps %d  road cpu %.2f ms  tick %d" % [Engine.get_frames_per_second(), _cpu_ms, sim.tick_count],
 		"s %.1f  x %.2f  v %.1f m/s" % [car.s_m, car.x_m, car.speed_mps],
 		"seg %d  k %.4f  vmax %s" % [track.segment_index_at(car.s_m), k, _kmh(VehiclePhysics.v_max(k, sim.car_params[RaceSimulation.PLAYER]))],
 		"vmax ahead %s" % _kmh(_v_max_ahead(car.s_m, 200.0)),

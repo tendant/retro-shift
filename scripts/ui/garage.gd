@@ -2,11 +2,9 @@ extends Control
 ## Garage hub (§2 core loop): pick an unlocked event, buy upgrades, toggle
 ## sound. Keyboard/gamepad navigation uses Godot's built-in ui_* actions.
 
-const ACCENT := Color8(255, 208, 64)
-const DIM := Color8(150, 160, 190)
-const TEXT := Color8(240, 240, 248)
-const PANEL := Color8(10, 12, 28, 200)
-const PANEL_EDGE := Color8(255, 255, 255, 70)
+const ACCENT := UiTheme.ACCENT
+const DIM := UiTheme.DIM
+const TEXT := UiTheme.TEXT
 const SOUNDS := {
 	&"move": preload("res://assets/audio/ui_move.wav"),
 	&"buy": preload("res://assets/audio/ui_buy.wav"),
@@ -108,7 +106,8 @@ func _build() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	box.add_child(spacer)
-	box.add_child(_label("↑↓ SELECT   ENTER CONFIRM   TOP 3 UNLOCKS THE NEXT EVENT", DIM))
+	var controls := "TAP TO CHOOSE" if Game.touch_mode() else "↑↓ SELECT   ENTER CONFIRM"
+	box.add_child(_label(controls + "   TOP 3 UNLOCKS THE NEXT EVENT", DIM))
 
 
 func _refresh() -> void:
@@ -170,42 +169,20 @@ func _focus_default() -> void:
 
 
 ## The UI scales in whole steps with window height, independent of the
-## 240 px game view (§10).
+## 240 px game view (§10), and stays inside the safe area.
 func _fit_scale() -> void:
-	_scale = maxi(1, get_window().size.y / 320)
-	var font_size := Hud.FONT_PX * _scale
-	_ui_theme.default_font_size = font_size
-	for side in ["left", "right", "top", "bottom"]:
-		_margin.add_theme_constant_override("margin_" + side, 12 * _scale)
+	_scale = UiTheme.scale_for(get_window().size.y)
+	UiTheme.apply(_ui_theme, _scale)
+	var inset := SafeArea.insets(get_window())
+	var sides := {"left": inset.x, "top": inset.y, "right": inset.z, "bottom": inset.w}
+	for side: String in sides:
+		_margin.add_theme_constant_override("margin_" + side, int(sides[side]) + 12 * _scale)
 	_content.add_theme_constant_override("separation", 3 * _scale)
+	for button: Button in find_children("*", "Button", true, false):
+		UiTheme.size_for_touch(button, get_window().size.y, 0.085)
 	for label: Label in find_children("*", "Label", true, false):
-		label.add_theme_font_size_override("font_size", font_size * label.get_meta("size", 1))
-	_ui_theme.set_stylebox("normal", "Button", _box(PANEL, PANEL_EDGE))
-	_ui_theme.set_stylebox("hover", "Button", _box(PANEL, PANEL_EDGE))
-	_ui_theme.set_stylebox("pressed", "Button", _box(PANEL, ACCENT))
-	_ui_theme.set_stylebox("focus", "Button", _box(Color.TRANSPARENT, ACCENT))
-	_ui_theme.set_stylebox("disabled", "Button", _box(Color8(10, 12, 28, 120), Color8(255, 255, 255, 25)))
-	_ui_theme.set_color("font_color", "Button", TEXT)
-	_ui_theme.set_color("font_hover_color", "Button", TEXT)
-	_ui_theme.set_color("font_focus_color", "Button", ACCENT)
-	_ui_theme.set_color("font_pressed_color", "Button", ACCENT)
-	_ui_theme.set_color("font_disabled_color", "Button", Color8(110, 116, 140))
-	_ui_theme.set_constant("h_separation", "GridContainer", 6 * _scale)
-	_ui_theme.set_constant("v_separation", "GridContainer", 2 * _scale)
-	_ui_theme.set_constant("separation", "HBoxContainer", 6 * _scale)
+		label.add_theme_font_size_override("font_size", Hud.FONT_PX * _scale * label.get_meta("size", 1))
 	_backdrop.pixel_scale = _scale
-
-
-func _box(fill: Color, edge: Color) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = fill
-	box.border_color = edge
-	box.set_border_width_all(_scale)
-	box.content_margin_left = 4 * _scale
-	box.content_margin_right = 4 * _scale
-	box.content_margin_top = 2 * _scale
-	box.content_margin_bottom = 2 * _scale
-	return box
 
 
 func _button() -> Button:

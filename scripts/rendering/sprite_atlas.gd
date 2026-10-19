@@ -35,6 +35,18 @@ const HUD_RECTS := {
 	&"light_off": Rect2(18, 0, 14, 14),
 	&"light_red": Rect2(33, 0, 14, 14),
 	&"light_green": Rect2(48, 0, 14, 14),
+	&"touch_left": Rect2(63, 0, 32, 32),
+	&"touch_left_pressed": Rect2(96, 0, 32, 32),
+	&"touch_right": Rect2(0, 33, 32, 32),
+	&"touch_right_pressed": Rect2(33, 33, 32, 32),
+	&"touch_gas": Rect2(66, 33, 32, 32),
+	&"touch_gas_pressed": Rect2(99, 33, 32, 32),
+	&"touch_brake": Rect2(0, 66, 32, 32),
+	&"touch_brake_pressed": Rect2(33, 66, 32, 32),
+	&"touch_nitro": Rect2(66, 66, 32, 32),
+	&"touch_nitro_pressed": Rect2(99, 66, 32, 32),
+	&"touch_pause": Rect2(0, 99, 32, 32),
+	&"touch_pause_pressed": Rect2(33, 99, 32, 32),
 }
 
 

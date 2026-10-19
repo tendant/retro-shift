@@ -1,7 +1,7 @@
 extends Node
 ## Race scene: wires the simulation to the low-res game view, reports the
-## finish to Game, and handles UI/game-state input (pause, restart, debug,
-## track switching, back to garage).
+## finish to Game, and handles game-state input: pause/resume (also when the
+## app goes to the background), restart, debug, track switching, garage.
 
 const VIEW_HEIGHT := 240
 const COUNTDOWN_S := 3
@@ -11,7 +11,11 @@ var _event: EventDefinition
 var _free_race: bool = false
 var _track_index: int = 0
 var _autodrive: bool = false
+## Touch layout: on-screen buttons, HUD kept out of the bottom corners.
+var _touch: bool = false
 var _audio: RaceAudio
+var _menu: RaceMenu
+var _touch_controls: TouchControls
 
 @onready var _sim: RaceSimulation = $RaceSimulation
 @onready var _view: SubViewport = $GameView
@@ -29,8 +33,20 @@ func _ready() -> void:
 	_sim.results_ready.connect(_on_results_ready)
 	_audio = RaceAudio.new()
 	add_child(_audio)
+	_menu = RaceMenu.new()
+	add_child(_menu)
+	_menu.resume_pressed.connect(_set_paused.bind(false))
+	_menu.restart_pressed.connect(_start_race)
+	_menu.garage_pressed.connect(Game.go_to_garage)
 	_autodrive = OS.get_cmdline_user_args().has("--autodrive")
 	_renderer.debug_enabled = OS.get_cmdline_user_args().has("--debug")
+	_touch = Game.touch_mode()
+	if _touch:
+		# Lets a mouse stand in for a finger when testing touch on desktop.
+		Input.emulate_touch_from_mouse = not DisplayServer.is_touchscreen_available()
+		_touch_controls = TouchControls.new()
+		add_child(_touch_controls)
+	_hud.touch_layout = _touch
 
 	_event = Game.current_event
 	_free_race = _event == null
@@ -40,15 +56,16 @@ func _ready() -> void:
 	_start_race()
 
 
+func _notification(what: int) -> void:
+	# Phone call, app switch, window focus lost: pause the race (§10).
+	if what == NOTIFICATION_APPLICATION_PAUSED or what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		if is_node_ready() and not _autodrive and not _sim.has_results():
+			_set_paused(true)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"confirm") and (_sim.has_results() or get_tree().paused):
-		if _free_race:
-			_start_race()
-		else:
-			Game.go_to_garage()
-	elif event.is_action_pressed(&"pause") and not _sim.has_results():
-		get_tree().paused = not get_tree().paused
-		_hud.paused = get_tree().paused
+	if event.is_action_pressed(&"pause") and not _sim.has_results():
+		_set_paused(not get_tree().paused)
 	elif event.is_action_pressed(&"restart"):
 		_start_race()
 	elif event.is_action_pressed(&"toggle_debug"):
@@ -59,12 +76,30 @@ func _unhandled_input(event: InputEvent) -> void:
 		_start_race()
 
 
+func is_paused() -> bool:
+	return get_tree().paused
+
+
+func _set_paused(paused: bool) -> void:
+	get_tree().paused = paused
+	_hud.paused = paused
+	if paused:
+		_menu.show_pause(_free_race)
+	else:
+		_menu.hide_menu()
+	_update_touch_controls()
+
+
+func _update_touch_controls() -> void:
+	if _touch_controls != null:
+		_touch_controls.visible = not get_tree().paused and not _sim.has_results()
+
+
 func _start_race() -> void:
 	get_tree().paused = false
 	_hud.paused = false
 	_hud.result_notes = PackedStringArray()
-	_hud.result_hint = "Enter: race again" if _free_race else "Enter: garage    R: retry"
-	_hud.pause_hint = "Enter: restart" if _free_race else "Enter: quit to garage"
+	_menu.hide_menu()
 
 	var track := TestTracks.make(_event.track_name)
 	track.laps = _event.laps
@@ -85,9 +120,12 @@ func _start_race() -> void:
 	_audio.sim = _sim
 	Game.play_music(&"race")
 	_sim.start_countdown(COUNTDOWN_S)
+	_update_touch_controls()
 
 
 func _on_results_ready() -> void:
+	_menu.show_results(_free_race)
+	_update_touch_controls()
 	var car := RaceSimulation.PLAYER
 	var place := _sim.result_order.find(car) + 1
 	var award := Game.record_finish(place, _sim.result_time_s[car])
@@ -121,6 +159,8 @@ func _fit_view() -> void:
 		return
 	var width := roundi(VIEW_HEIGHT * float(window_size.x) / float(window_size.y))
 	_view.size = Vector2i(maxi(width, VIEW_HEIGHT), VIEW_HEIGHT)
+	var to_view := float(VIEW_HEIGHT) / window_size.y
+	_hud.safe_insets = SafeArea.insets(get_window()) * to_view
 
 
 static func _cmdline_value(prefix: String) -> String:

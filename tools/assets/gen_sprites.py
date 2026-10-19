@@ -313,6 +313,93 @@ def start_light(color):
     return c
 
 
+# --- Touch controls ----------------------------------------------------------
+
+TOUCH_SIZE = 32
+
+
+def touch_button(icon, pressed):
+    """Translucent round button with a white pixel icon (ASCII, 16x16)."""
+    c = Canvas(TOUCH_SIZE, TOUCH_SIZE)
+    fill = (255, 255, 255, 110 if pressed else 40)
+    edge = (255, 255, 255, 230 if pressed else 150)
+    c.ellipse(16, 16, 15.5, 15.5, edge)
+    c.ellipse(16, 16, 14.0, 14.0, fill)
+    c.from_ascii(icon, {"#": (255, 255, 255, 255 if pressed else 220)}, 8, 8)
+    return c
+
+
+TOUCH_ICONS = {
+    "left": [
+        "................", "......##........", ".....###........", "....####........",
+        "...#####........", "..##############", ".###############", "################",
+        "################", ".###############", "..##############", "...#####........",
+        "....####........", ".....###........", "......##........", "................",
+    ],
+    "gas": [
+        ".......##.......", "......####......", ".....######.....", "....########....",
+        "...##########...", "..############..", ".....######.....", ".....######.....",
+        ".....######.....", ".....######.....", ".....######.....", ".....######.....",
+        ".....######.....", ".....######.....", ".....######.....", "................",
+    ],
+    "nitro": [
+        ".......#........", "......##........", "......###.......", ".....####.......",
+        ".....#####......", "....######.#....", "....#######.....", "...########.#...",
+        "...##########...", "..####..######..", "..###....#####..", "..###.....####..",
+        "..###.....####..", "...###...####...", "....########....", "......####......",
+    ],
+    "pause": [
+        "................", "................", "...####..####...", "...####..####...",
+        "...####..####...", "...####..####...", "...####..####...", "...####..####...",
+        "...####..####...", "...####..####...", "...####..####...", "...####..####...",
+        "...####..####...", "...####..####...", "................", "................",
+    ],
+}
+
+
+def touch_sprites():
+    sprites = {}
+    for name, icon in TOUCH_ICONS.items():
+        variants = {name: icon}
+        if name == "left":
+            variants["right"] = [row[::-1] for row in icon]
+        if name == "gas":
+            variants["brake"] = icon[::-1]
+        for variant, rows in variants.items():
+            sprites[f"touch_{variant}"] = touch_button(rows, False)
+            sprites[f"touch_{variant}_pressed"] = touch_button(rows, True)
+    return sprites
+
+
+# --- App icon ------------------------------------------------------------------
+
+def app_icon():
+    """128x128 pixel art (sunset, road, the player's car), upscaled 8x."""
+    c = Canvas(128, 128)
+    top, bottom = hex_color("20347a"), hex_color("f09a6e")
+    for y in range(70):
+        t = y / 69
+        c.hline(0, 127, y, tuple(int(top[i] + (bottom[i] - top[i]) * t) for i in range(3)) + (255,))
+    c.ellipse(64, 66, 22, 22, hex_color("ffd060"))
+    c.blit(mountains(), -64, 70 - 40)
+    c.rect(0, 70, 128, 58, hex_color("3c9050"))
+    c.polygon([(56, 70), (72, 70), (124, 128), (4, 128)], hex_color("6c6c76"))
+    for i, y in enumerate(range(72, 128, 9)):
+        w = 1 + i
+        c.rect(64 - w // 2, y, w, 4 + i, hex_color("f0f0f0"))
+    car = draw_car(list(CAR_COLORS.values())[0], 0)
+    big = Canvas(CAR_W * 2, CAR_H * 2)
+    for y in range(big.height):
+        for x in range(big.width):
+            big.set(x, y, car.get(x // 2, y // 2))
+    c.blit(big, 64 - CAR_W, 128 - CAR_H * 2 - 2)
+    out = Canvas(1024, 1024)
+    for y in range(1024):
+        for x in range(1024):
+            out.pixels[y * 1024 + x] = c.pixels[(y // 8) * 128 + x // 8]
+    return out
+
+
 # --- Packing ---------------------------------------------------------------
 
 def pack(sprites, width):
@@ -396,9 +483,11 @@ def main():
         "light_red": start_light("ff3020"),
         "light_green": start_light("30f040"),
     }
-    hud_sheet, hud_rects = pack(hud, 64)
+    hud.update(touch_sprites())
+    hud_sheet, hud_rects = pack(hud, 132)
     hud_sheet.save(os.path.join(OUT_DIR, "hud.png"))
 
+    app_icon().save(os.path.join(ROOT, "assets", "icon.png"))
     clouds().save(os.path.join(OUT_DIR, "bg_clouds.png"))
     mountains().save(os.path.join(OUT_DIR, "bg_mountains.png"))
     hills().save(os.path.join(OUT_DIR, "bg_hills.png"))

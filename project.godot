@@ -14,6 +14,7 @@ config/name="RetroShift"
 config/description="Race. Earn. Upgrade. Repeat."
 run/main_scene="res://scenes/garage.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/icon="res://assets/icon.png"
 
 [autoload]
 
@@ -23,6 +24,7 @@ Game="*res://scripts/core/game.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=960
+window/handheld/orientation=4
 
 [editor_plugins]
 

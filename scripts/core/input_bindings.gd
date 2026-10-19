@@ -18,7 +18,6 @@ static func install_defaults() -> void:
 	# UI / game state.
 	_action(&"pause", [_key(KEY_ESCAPE), _key(KEY_P), _button(JOY_BUTTON_START)])
 	_action(&"restart", [_key(KEY_R), _button(JOY_BUTTON_BACK)])
-	_action(&"confirm", [_key(KEY_ENTER), _key(KEY_KP_ENTER), _button(JOY_BUTTON_Y)])
 	_action(&"toggle_debug", [_key(KEY_F1), _key(KEY_TAB)])
 	_action(&"next_track", [_key(KEY_F2)])
 
