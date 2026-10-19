@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CupDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/cup_definition.gd" id="1_cup"]
+[ext_resource type="Script" path="res://scripts/progression/event_definition.gd" id="5_event_script"]
+[ext_resource type="Resource" path="res://resources/events/dust_devil_flats.tres" id="2_e1"]
+[ext_resource type="Resource" path="res://resources/events/canyon_switchbacks.tres" id="3_e2"]
+[ext_resource type="Resource" path="res://resources/events/mirage_highway.tres" id="4_e3"]
+
+[resource]
+script = ExtResource("1_cup")
+id = &"red_mesa"
+display_name = "Red Mesa Cup"
+events = Array[ExtResource("5_event_script")]([ExtResource("2_e1"), ExtResource("3_e2"), ExtResource("4_e3")])
+trophy_bonus = Array[int]([420, 700, 1120])
+silver_points = 18
+gold_points = 26
+unlocks = &""

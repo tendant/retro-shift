@@ -12,6 +12,7 @@ const DEFAULT_PALETTE := preload("res://scripts/track/track_palette.gd")
 const FAR_LAYERS := {
 	&"mountains": SpriteAtlas.BG_MOUNTAINS,
 	&"sea": SpriteAtlas.BG_SEA,
+	&"mesas": SpriteAtlas.BG_MESAS,
 }
 const FLAME := [Color8(255, 236, 140), Color8(255, 150, 40), Color8(120, 200, 255)]
 const DEBUG := Color8(255, 240, 0)
@@ -24,6 +25,9 @@ const SCENERY_PX_PER_M := 8.0
 const RUMBLE_WIDTH_FRAC := 0.12
 const TREE_KINDS := [&"pine_a", &"pine_a", &"pine_b", &"pine_b", &"pine_a", &"bush", &"bush", &"rock"]
 const PALM_KINDS := [&"palm_a", &"palm_b", &"palm_a", &"palm_b", &"bush", &"rock"]
+const DESERT_KINDS := [&"cactus_a", &"cactus_b", &"cactus_barrel", &"sandstone", &"cactus_barrel", &"sandstone"]
+## Roadside dressing sprites by segment scenery theme.
+const SCENERY_THEMES := {&"trees": TREE_KINDS, &"palms": PALM_KINDS, &"desert": DESERT_KINDS}
 const BILLBOARDS := [&"billboard_retroshift", &"billboard_nitro", &"billboard_upgrade"]
 ## Chevron signs mark curves at least this tight.
 const CHEVRON_MIN_CURVATURE := 1.0 / 130.0
@@ -239,8 +243,8 @@ func _draw_scenery_on_strip(i: int) -> void:
 		var h := _hash(n)
 		var side := 1.0 if posmod(n, 2) == 0 else -1.0
 		match seg.scenery_id:
-			&"trees", &"palms":
-				var kinds: Array = TREE_KINDS if seg.scenery_id == &"trees" else PALM_KINDS
+			&"trees", &"palms", &"desert":
+				var kinds: Array = SCENERY_THEMES[seg.scenery_id]
 				var kind: StringName = kinds[h % kinds.size()]
 				var lateral := side * (rumble + 3.0 + float(h % 7))
 				_draw_scenery(kind, p.project_on_road(s, lateral))

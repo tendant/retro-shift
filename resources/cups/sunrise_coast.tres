@@ -14,4 +14,4 @@ events = Array[ExtResource("5_event_script")]([ExtResource("2_e1"), ExtResource(
 trophy_bonus = Array[int]([300, 500, 800])
 silver_points = 18
 gold_points = 26
-unlocks = &""
+unlocks = &"dust_devil_flats"

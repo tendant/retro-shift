@@ -1,0 +1,116 @@
+[gd_resource type="Resource" script_class="Track" format=3]
+
+[ext_resource type="Script" path="res://scripts/track/track_palette.gd" id="1_mtpa4"]
+[ext_resource type="Script" path="res://scripts/track/track.gd" id="2_07kd5"]
+[ext_resource type="Script" path="res://scripts/track/track_segment.gd" id="3_ntul5"]
+
+[sub_resource type="Resource" id="Resource_xppo7"]
+script = ExtResource("1_mtpa4")
+sky_top = Color(0.3764706, 0.54901963, 0.83137256, 1)
+sky_horizon = Color(0.972549, 0.9098039, 0.76862746, 1)
+far_layer = &"mesas"
+show_hills = false
+grass_light = Color(0.89411765, 0.6901961, 0.4392157, 1)
+grass_dark = Color(0.8392157, 0.63529414, 0.39215687, 1)
+road_light = Color(0.3764706, 0.3529412, 0.36078432, 1)
+road_dark = Color(0.34509805, 0.32156864, 0.3372549, 1)
+rumble_dark = Color(0.9098039, 0.47058824, 0.1254902, 1)
+
+[sub_resource type="Resource" id="Resource_6jcge"]
+script = ExtResource("3_ntul5")
+length_m = 400.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_avrnn"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = -8.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_yu3rq"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = 8.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_8tn87"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = 6.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_ov8cq"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = -6.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_dhfpw"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = -8.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_x0sx3"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = 8.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_0yuis"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = 7.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_nokj0"]
+script = ExtResource("3_ntul5")
+length_m = 100.0
+elevation_delta_m = -7.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_qphbc"]
+script = ExtResource("3_ntul5")
+length_m = 90.0
+elevation_delta_m = 8.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_5qaqk"]
+script = ExtResource("3_ntul5")
+length_m = 110.0
+curvature_rad_per_m = 0.014285714285714285
+elevation_delta_m = -8.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_1qjba"]
+script = ExtResource("3_ntul5")
+length_m = 300.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_qle5t"]
+script = ExtResource("3_ntul5")
+length_m = 400.0
+curvature_rad_per_m = 0.005
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_gs3xw"]
+script = ExtResource("3_ntul5")
+length_m = 400.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_ul028"]
+script = ExtResource("3_ntul5")
+length_m = 406.76351036265226
+curvature_rad_per_m = 0.006666666666666667
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_v1l30"]
+script = ExtResource("3_ntul5")
+length_m = 200.0
+scenery_id = &"posts"
+
+[resource]
+script = ExtResource("2_07kd5")
+display_name = "Mirage Highway"
+palette = SubResource("Resource_xppo7")
+segments = Array[ExtResource("3_ntul5")]([SubResource("Resource_6jcge"), SubResource("Resource_avrnn"), SubResource("Resource_yu3rq"), SubResource("Resource_8tn87"), SubResource("Resource_ov8cq"), SubResource("Resource_dhfpw"), SubResource("Resource_x0sx3"), SubResource("Resource_0yuis"), SubResource("Resource_nokj0"), SubResource("Resource_qphbc"), SubResource("Resource_5qaqk"), SubResource("Resource_1qjba"), SubResource("Resource_qle5t"), SubResource("Resource_gs3xw"), SubResource("Resource_ul028"), SubResource("Resource_v1l30")])

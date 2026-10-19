@@ -7,6 +7,9 @@ const EVENT_TRACKS := {
 	&"harbor_mile": "res://resources/tracks/harbor_mile.tres",
 	&"lighthouse_loop": "res://resources/tracks/lighthouse_loop.tres",
 	&"cliffside_run": "res://resources/tracks/cliffside_run.tres",
+	&"dust_devil_flats": "res://resources/tracks/dust_devil_flats.tres",
+	&"canyon_switchbacks": "res://resources/tracks/canyon_switchbacks.tres",
+	&"mirage_highway": "res://resources/tracks/mirage_highway.tres",
 }
 
 

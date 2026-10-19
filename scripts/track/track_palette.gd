@@ -5,7 +5,7 @@ extends Resource
 @export_group("Sky")
 @export var sky_top: Color = Color8(48, 88, 192)
 @export var sky_horizon: Color = Color8(168, 204, 244)
-## Far background strip: &"mountains" or &"sea".
+## Far background strip: &"mountains", &"sea" or &"mesas".
 @export var far_layer: StringName = &"mountains"
 @export var show_hills: bool = true
 

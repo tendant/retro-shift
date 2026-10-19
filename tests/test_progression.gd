@@ -96,17 +96,26 @@ func test_fourth_place_anywhere_blocks_the_trophy() -> void:
 	assert_eq(progression.cup_points(cup), 13, "points still count")
 
 
-func test_sunrise_coast_cup_resources() -> void:
-	var cup: CupDefinition = load("res://resources/cups/sunrise_coast.tres")
-	assert_eq(cup.events.size(), 3)
-	assert_eq(cup.events[0].id, PlayerProfile.FIRST_EVENT, "the championship starts here")
-	for i in cup.events.size() - 1:
-		assert_eq(cup.events[i].unlocks, cup.events[i + 1].id, "top 3 unlocks the next event")
-	for i in range(1, cup.events.size()):
-		assert_gte(cup.events[i].skill_max, cup.events[i - 1].skill_max, "AI gets no easier")
-	for event in cup.events:
-		var track: Track = event.track.duplicate()
-		assert_eq(track.build(), PackedStringArray(), String(event.id))
-		assert_almost_eq(track.net_heading_rad, TAU, 1e-6, "%s is a full loop" % event.id)
-		assert_almost_eq(track.net_elevation_m, 0.0, 1e-6, "%s ends where it starts" % event.id)
-		assert_not_null(track.palette, "%s has its own look" % event.id)
+func test_cup_resources() -> void:
+	var cups := Game.cups
+	assert_gte(cups.size(), 2)
+	assert_eq(cups[0].events[0].id, PlayerProfile.FIRST_EVENT, "the championship starts here")
+	var previous_skill := 0.0
+	for c in cups.size():
+		var cup := cups[c]
+		assert_eq(cup.events.size(), 3, String(cup.id))
+		for i in cup.events.size() - 1:
+			assert_eq(cup.events[i].unlocks, cup.events[i + 1].id, "top 3 unlocks the next event")
+		assert_eq(cup.events[-1].unlocks, &"", "the cup trophy, not the last race, opens the next cup")
+		var next_first: StringName = cups[c + 1].events[0].id if c + 1 < cups.size() else &""
+		assert_eq(cup.unlocks, next_first, "%s unlocks the next cup" % cup.id)
+		for event in cup.events:
+			assert_gte(event.skill_max, previous_skill, "%s: AI gets no easier" % event.id)
+			previous_skill = event.skill_max
+			var track: Track = event.track.duplicate()
+			assert_eq(track.build(), PackedStringArray(), String(event.id))
+			assert_almost_eq(track.net_heading_rad, TAU, 1e-6, "%s is a full loop" % event.id)
+			assert_almost_eq(track.net_elevation_m, 0.0, 1e-6, "%s ends where it starts" % event.id)
+			assert_not_null(track.palette, "%s has its own look" % event.id)
+		if c > 0:
+			assert_gt(cup.events[0].reward_mult, cups[c - 1].events[0].reward_mult, "later cups pay more")

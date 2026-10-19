@@ -1,0 +1,102 @@
+[gd_resource type="Resource" script_class="Track" format=3]
+
+[ext_resource type="Script" path="res://scripts/track/track_palette.gd" id="1_yj3lh"]
+[ext_resource type="Script" path="res://scripts/track/track.gd" id="2_nwc0t"]
+[ext_resource type="Script" path="res://scripts/track/track_segment.gd" id="3_w8qc6"]
+
+[sub_resource type="Resource" id="Resource_lj24y"]
+script = ExtResource("1_yj3lh")
+sky_top = Color(0.28235295, 0.39215687, 0.6901961, 1)
+sky_horizon = Color(0.9411765, 0.74509805, 0.54901963, 1)
+far_layer = &"mesas"
+show_hills = false
+grass_light = Color(0.72156864, 0.40784314, 0.2509804, 1)
+grass_dark = Color(0.65882355, 0.36078432, 0.21960784, 1)
+road_light = Color(0.3764706, 0.3529412, 0.36078432, 1)
+road_dark = Color(0.34509805, 0.32156864, 0.3372549, 1)
+rumble_dark = Color(0.9098039, 0.47058824, 0.1254902, 1)
+
+[sub_resource type="Resource" id="Resource_yh1ql"]
+script = ExtResource("3_w8qc6")
+length_m = 300.0
+road_half_width_m = 4.5
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_c6vol"]
+script = ExtResource("3_w8qc6")
+length_m = 94.24777960769379
+curvature_rad_per_m = 0.016666666666666666
+elevation_delta_m = 6.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_0hq6k"]
+script = ExtResource("3_w8qc6")
+length_m = 120.0
+elevation_delta_m = 8.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_6w2f5"]
+script = ExtResource("3_w8qc6")
+length_m = 125.66370614359172
+curvature_rad_per_m = -0.025
+elevation_delta_m = 12.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_3e7l5"]
+script = ExtResource("3_w8qc6")
+length_m = 120.0
+elevation_delta_m = 8.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_mmqsq"]
+script = ExtResource("3_w8qc6")
+length_m = 125.66370614359172
+curvature_rad_per_m = 0.025
+elevation_delta_m = 11.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_oscdh"]
+script = ExtResource("3_w8qc6")
+length_m = 150.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_xi1ib"]
+script = ExtResource("3_w8qc6")
+length_m = 300.0
+curvature_rad_per_m = 0.008333333333333333
+elevation_delta_m = -20.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_kvbtd"]
+script = ExtResource("3_w8qc6")
+length_m = 300.0
+elevation_delta_m = -15.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_2dnl0"]
+script = ExtResource("3_w8qc6")
+length_m = 221.23889803846896
+curvature_rad_per_m = 0.01
+elevation_delta_m = -10.0
+road_half_width_m = 4.5
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_gdv7g"]
+script = ExtResource("3_w8qc6")
+length_m = 200.0
+road_half_width_m = 4.5
+scenery_id = &"posts"
+
+[resource]
+script = ExtResource("2_nwc0t")
+display_name = "Canyon Switchbacks"
+palette = SubResource("Resource_lj24y")
+segments = Array[ExtResource("3_w8qc6")]([SubResource("Resource_yh1ql"), SubResource("Resource_c6vol"), SubResource("Resource_0hq6k"), SubResource("Resource_6w2f5"), SubResource("Resource_3e7l5"), SubResource("Resource_mmqsq"), SubResource("Resource_oscdh"), SubResource("Resource_xi1ib"), SubResource("Resource_kvbtd"), SubResource("Resource_2dnl0"), SubResource("Resource_gdv7g")])

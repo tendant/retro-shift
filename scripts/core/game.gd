@@ -4,7 +4,7 @@ extends Node
 
 const GARAGE_SCENE := "res://scenes/garage.tscn"
 const RACE_SCENE := "res://scenes/race.tscn"
-const CUP_PATHS := ["res://resources/cups/sunrise_coast.tres"]
+const CUP_PATHS := ["res://resources/cups/sunrise_coast.tres", "res://resources/cups/red_mesa.tres"]
 ## Flags that skip the garage and drop straight into a free race.
 const DEV_RACE_FLAGS := ["--track=", "--opponents=", "--autodrive"]
 ## Imported with integer-only scaling so pixels stay square.

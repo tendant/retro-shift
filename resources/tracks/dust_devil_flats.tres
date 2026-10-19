@@ -1,0 +1,91 @@
+[gd_resource type="Resource" script_class="Track" format=3]
+
+[ext_resource type="Script" path="res://scripts/track/track_palette.gd" id="1_caemx"]
+[ext_resource type="Script" path="res://scripts/track/track.gd" id="2_uvk33"]
+[ext_resource type="Script" path="res://scripts/track/track_segment.gd" id="3_xrccb"]
+
+[sub_resource type="Resource" id="Resource_eughs"]
+script = ExtResource("1_caemx")
+sky_top = Color(0.17254902, 0.4392157, 0.8156863, 1)
+sky_horizon = Color(0.9254902, 0.8627451, 0.6901961, 1)
+far_layer = &"mesas"
+show_hills = false
+grass_light = Color(0.84705883, 0.6039216, 0.36078432, 1)
+grass_dark = Color(0.78431374, 0.5411765, 0.3137255, 1)
+road_light = Color(0.3764706, 0.3529412, 0.36078432, 1)
+road_dark = Color(0.34509805, 0.32156864, 0.3372549, 1)
+rumble_dark = Color(0.9098039, 0.47058824, 0.1254902, 1)
+
+[sub_resource type="Resource" id="Resource_xunbl"]
+script = ExtResource("3_xrccb")
+length_m = 700.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_xfig2"]
+script = ExtResource("3_xrccb")
+length_m = 125.66370614359172
+curvature_rad_per_m = 0.025
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_iw1kq"]
+script = ExtResource("3_xrccb")
+length_m = 150.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_6wn8b"]
+script = ExtResource("3_xrccb")
+length_m = 120.0
+curvature_rad_per_m = -0.006666666666666667
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_gyoqv"]
+script = ExtResource("3_xrccb")
+length_m = 120.0
+curvature_rad_per_m = 0.006666666666666667
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_aweif"]
+script = ExtResource("3_xrccb")
+length_m = 350.0
+elevation_delta_m = 6.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_w6fdr"]
+script = ExtResource("3_xrccb")
+length_m = 350.0
+elevation_delta_m = -6.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_5v30a"]
+script = ExtResource("3_xrccb")
+length_m = 141.3716694115407
+curvature_rad_per_m = 0.022222222222222223
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_6ropr"]
+script = ExtResource("3_xrccb")
+length_m = 200.0
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_8l5yo"]
+script = ExtResource("3_xrccb")
+length_m = 60.0
+curvature_rad_per_m = -0.016666666666666666
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_ytbkc"]
+script = ExtResource("3_xrccb")
+length_m = 60.0
+curvature_rad_per_m = 0.016666666666666666
+scenery_id = &"desert"
+
+[sub_resource type="Resource" id="Resource_88fsc"]
+script = ExtResource("3_xrccb")
+length_m = 200.0
+scenery_id = &"desert"
+
+[resource]
+script = ExtResource("2_uvk33")
+display_name = "Dust Devil Flats"
+palette = SubResource("Resource_eughs")
+segments = Array[ExtResource("3_xrccb")]([SubResource("Resource_xunbl"), SubResource("Resource_xfig2"), SubResource("Resource_iw1kq"), SubResource("Resource_6wn8b"), SubResource("Resource_gyoqv"), SubResource("Resource_aweif"), SubResource("Resource_w6fdr"), SubResource("Resource_5v30a"), SubResource("Resource_6ropr"), SubResource("Resource_8l5yo"), SubResource("Resource_ytbkc"), SubResource("Resource_88fsc")])

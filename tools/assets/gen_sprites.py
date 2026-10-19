@@ -180,6 +180,55 @@ def palm(lean, seed):
     return c
 
 
+def cactus_tall(seed):
+    """Columnar cactus with two arms."""
+    rng = random.Random(seed)
+    c = Canvas(28, 56)
+    g = [hex_color(h) for h in ("1c5a30", "2e7c40", "4ea05a")]
+    def column(x, top, bottom, w):
+        c.rect(x, top, w, bottom - top, g[1])
+        c.rect(x, top, 1, bottom - top, g[2])  # lit edge
+        c.rect(x + w - 2, top, 2, bottom - top, g[0])  # shaded edge
+        c.ellipse(x + w / 2, top + 1, w / 2, 2, g[1])
+        for y in range(top + 3, bottom, 3):
+            c.set(x + w // 2, y, g[0])  # rib spines
+    column(10, 4, 54, 7)
+    left_y = rng.randint(18, 24)
+    right_y = rng.randint(12, 18)
+    c.rect(4, left_y + 8, 7, 4, g[1])
+    column(3, left_y, left_y + 12, 5)
+    c.rect(16, right_y + 10, 7, 4, g[1])
+    column(19, right_y, right_y + 14, 5)
+    c.ellipse(14, 55, 8, 1.5, SHADOW)
+    c.outline(OUTLINE)
+    return c
+
+
+def cactus_barrel():
+    c = Canvas(16, 16)
+    g = [hex_color(h) for h in ("1c5a30", "2e7c40", "4ea05a")]
+    c.ellipse(8, 9, 6.5, 6, g[1])
+    for x in (4, 8, 12):
+        c.rect(x, 4, 1, 10, g[0])
+    c.rect(5, 5, 1, 6, g[2])
+    c.ellipse(8, 3.5, 2.5, 1.5, hex_color("f06890"))  # bloom
+    c.outline(OUTLINE)
+    return c
+
+
+def sandstone():
+    c = Canvas(28, 16)
+    bands = [hex_color(h) for h in ("8c3c24", "b05a34", "cc7a48", "e09a64")]
+    c.polygon([(1, 15), (27, 15), (24, 5), (16, 1), (6, 3), (2, 8)], bands[1])
+    for i, y in enumerate((4, 7, 10, 13)):
+        for x in range(28):
+            if c.get(x, y)[3] and (x + i) % 5:
+                c.set(x, y, bands[(i + 2) % 4])
+    c.polygon([(16, 15), (27, 15), (24, 5), (17, 3)], bands[0])
+    c.outline(OUTLINE)
+    return c
+
+
 def bush():
     c = Canvas(24, 14)
     g = [hex_color(h) for h in ("185c2c", "2a8040", "52a860")]
@@ -328,6 +377,24 @@ def sea():
         x, y = rng.randint(0, w - 1), rng.randint(10, h - 2)
         for dx in range(rng.randint(2, 5)):
             c.set((x + dx) % w, y, light)
+    return c
+
+
+def mesas():
+    """Flat-topped red buttes in desert haze; tiles horizontally."""
+    w, h = 256, 44
+    c = Canvas(w, h)
+    far, near, top_band = hex_color("c87a5c"), hex_color("a85438"), hex_color("e6a070")
+    rng = random.Random(21)
+    buttes = [(rng.randint(0, w - 1), rng.randint(24, 60), rng.randint(14, 30), far) for _ in range(5)]
+    buttes += [(rng.randint(0, w - 1), rng.randint(16, 40), rng.randint(20, 38), near) for _ in range(4)]
+    for cx, width, height, color in buttes:
+        for dx in (-w, 0, w):  # wrap so the strip tiles
+            left, right = cx + dx - width // 2, cx + dx + width // 2
+            top = h - height
+            c.polygon([(left - 6, h), (right + 6, h), (right, top), (left, top)], color)
+            c.hline(left, right, top, top_band)
+            c.hline(left - 2, right + 2, top + height // 2, top_band if color == far else far)
     return c
 
 
@@ -490,6 +557,7 @@ const BG_CLOUDS := preload("res://assets/sprites/bg_clouds.png")
 const BG_MOUNTAINS := preload("res://assets/sprites/bg_mountains.png")
 const BG_HILLS := preload("res://assets/sprites/bg_hills.png")
 const BG_SEA := preload("res://assets/sprites/bg_sea.png")
+const BG_MESAS := preload("res://assets/sprites/bg_mesas.png")
 
 const CAR_SIZE := Vector2({CAR_W}, {CAR_H})
 const CAR_COLORS := {len(CAR_COLORS)}
@@ -523,6 +591,10 @@ def main():
         "bush": bush(),
         "palm_a": palm(1, 4),
         "palm_b": palm(-1, 5),
+        "cactus_a": cactus_tall(7),
+        "cactus_b": cactus_tall(8),
+        "cactus_barrel": cactus_barrel(),
+        "sandstone": sandstone(),
         "rock": rock(),
         "post": marker_post(),
         "chevron_right": chevron,
@@ -550,6 +622,7 @@ def main():
     app_icon().save(os.path.join(ROOT, "assets", "icon.png"))
     clouds().save(os.path.join(OUT_DIR, "bg_clouds.png"))
     sea().save(os.path.join(OUT_DIR, "bg_sea.png"))
+    mesas().save(os.path.join(OUT_DIR, "bg_mesas.png"))
     mountains().save(os.path.join(OUT_DIR, "bg_mountains.png"))
     hills().save(os.path.join(OUT_DIR, "bg_hills.png"))
 

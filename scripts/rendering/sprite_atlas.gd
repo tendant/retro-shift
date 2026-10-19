@@ -9,6 +9,7 @@ const BG_CLOUDS := preload("res://assets/sprites/bg_clouds.png")
 const BG_MOUNTAINS := preload("res://assets/sprites/bg_mountains.png")
 const BG_HILLS := preload("res://assets/sprites/bg_hills.png")
 const BG_SEA := preload("res://assets/sprites/bg_sea.png")
+const BG_MESAS := preload("res://assets/sprites/bg_mesas.png")
 
 const CAR_SIZE := Vector2(48, 30)
 const CAR_COLORS := 7
@@ -21,15 +22,19 @@ const SCENERY_RECTS := {
 	&"bush": Rect2(66, 0, 24, 14),
 	&"palm_a": Rect2(91, 0, 40, 64),
 	&"palm_b": Rect2(132, 0, 40, 64),
-	&"rock": Rect2(173, 0, 20, 12),
-	&"post": Rect2(194, 0, 6, 24),
-	&"chevron_right": Rect2(201, 0, 18, 24),
-	&"chevron_left": Rect2(220, 0, 18, 24),
-	&"gantry_pillar": Rect2(239, 0, 8, 64),
-	&"gantry_banner": Rect2(0, 65, 96, 16),
-	&"billboard_retroshift": Rect2(97, 65, 74, 36),
-	&"billboard_nitro": Rect2(172, 65, 64, 36),
-	&"billboard_upgrade": Rect2(0, 102, 64, 36),
+	&"cactus_a": Rect2(173, 0, 28, 56),
+	&"cactus_b": Rect2(202, 0, 28, 56),
+	&"cactus_barrel": Rect2(231, 0, 16, 16),
+	&"sandstone": Rect2(0, 65, 28, 16),
+	&"rock": Rect2(29, 65, 20, 12),
+	&"post": Rect2(50, 65, 6, 24),
+	&"chevron_right": Rect2(57, 65, 18, 24),
+	&"chevron_left": Rect2(76, 65, 18, 24),
+	&"gantry_pillar": Rect2(95, 65, 8, 64),
+	&"gantry_banner": Rect2(104, 65, 96, 16),
+	&"billboard_retroshift": Rect2(0, 130, 74, 36),
+	&"billboard_nitro": Rect2(75, 130, 64, 36),
+	&"billboard_upgrade": Rect2(140, 130, 64, 36),
 }
 
 const HUD_RECTS := {
