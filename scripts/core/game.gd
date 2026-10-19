@@ -34,6 +34,7 @@ func _ready() -> void:
 		events.append(load(path))
 	progression = Progression.new(SaveService.new(FileSaveStorage.new()))
 	_setup_audio()
+	get_tree().auto_accept_quit = false
 	for arg in OS.get_cmdline_user_args():
 		for flag: String in DEV_RACE_FLAGS:
 			if arg.begins_with(flag):
@@ -47,9 +48,21 @@ func take_dev_race_request() -> bool:
 	return pending
 
 
-func _exit_tree() -> void:
-	# A stream still playing at quit leaks its playback object.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		quit()
+
+
+## Quits after stopping all audio. Streams still playing at exit leak their
+## playback objects, which the audio server only releases on a later mix.
+func quit() -> void:
 	stop_music()
+	var scene := get_tree().current_scene
+	if scene != null:
+		scene.queue_free()
+	for i in 3:
+		await get_tree().process_frame
+	get_tree().quit()
 
 
 func event_by_id(id: StringName) -> EventDefinition:
