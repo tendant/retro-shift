@@ -19,8 +19,6 @@ const FOLLOW_GAP_M := 12.0
 const CLEAR_BEHIND_M := 6.0
 const LANE_CLEARANCE_M := 0.4
 const PASS_COOLDOWN_S := 3.0
-## Fire nitro only when the road stays straight this far ahead.
-const NITRO_STRAIGHT_M := 300.0
 const STEER_GAIN_PER_M := 0.35
 const STEER_DAMPING_S := 0.25
 
@@ -97,24 +95,30 @@ func _update_state(me: VehicleState, ahead: int) -> void:
 ## Highest speed from which the car can still slow to every curve's safe
 ## speed within the braking look-ahead, capped by its own top speed.
 func _curve_target_speed(me: VehicleState) -> float:
-	var params := sim.params
+	var params := sim.car_params[car]
+	return _braking_limit(me.s_m, params.max_speed_mps * sim.top_speed_mult[car] * skill)
+
+
+## Highest speed at `from_s` (up to `cap`) that still allows braking to the
+## safe speed of every curve within braking distance of `cap`.
+func _braking_limit(from_s: float, cap: float) -> float:
+	var params := sim.car_params[car]
 	var track := sim.track
-	var cap := params.max_speed_mps * sim.top_speed_mult[car] * skill
 	var brake := params.brake_decel_mps2 * PLANNED_BRAKE_FRACTION
-	var window := me.speed_mps * me.speed_mps / (2.0 * brake) + 20.0
-	var target := cap
+	var window := cap * cap / (2.0 * brake) + 20.0
+	var limit := cap
 	var d := 0.0
 	while d <= window:
-		var safe := VehiclePhysics.v_max(track.curvature_at(me.s_m + d), params) * skill * SPEED_MARGIN
-		if safe < target:
-			target = minf(target, sqrt(safe * safe + 2.0 * brake * d))
+		var safe := VehiclePhysics.v_max(track.curvature_at(from_s + d), params) * skill * SPEED_MARGIN
+		if safe < limit:
+			limit = minf(limit, sqrt(safe * safe + 2.0 * brake * d))
 		d += SAMPLE_STEP_M
-	return target
+	return limit
 
 
 ## Feed-forward against the curve push, plus PD toward the lane.
 func _steer_toward(me: VehicleState, lane_m: float) -> float:
-	var params := sim.params
+	var params := sim.car_params[car]
 	var k := sim.track.curvature_at(me.s_m)
 	var feed_forward := k * me.speed_mps * me.speed_mps / (params.steer_max_accel_mps2 * params.grip)
 	var error := lane_m - me.x_m
@@ -122,18 +126,22 @@ func _steer_toward(me: VehicleState, lane_m: float) -> float:
 			-1.0, 1.0)
 
 
+## Boost only when the car could still hold its normal top speed at the end
+## of the boost, so the extra speed isn't wasted braking for a curve.
 func _wants_nitro(me: VehicleState) -> bool:
 	if me.nitro_remaining <= 0 or me.nitro_timer_s > 0.0 or state == State.FOLLOW:
 		return false
-	var params := sim.params
-	if me.speed_mps < 0.7 * params.max_speed_mps:
+	var params := sim.car_params[car]
+	var cap := params.max_speed_mps * sim.top_speed_mult[car]
+	# Boosts pay off most accelerating out of a corner, not at top speed.
+	if me.speed_mps < 0.6 * cap or me.speed_mps > 0.9 * cap:
 		return false
-	var d := 0.0
-	while d <= NITRO_STRAIGHT_M:
-		if VehiclePhysics.v_max(sim.track.curvature_at(me.s_m + d), params) < params.max_speed_mps * params.nitro_speed_mult:
-			return false
-		d += 2.0 * SAMPLE_STEP_M
-	return true
+	# Not while a curve is already holding the car back...
+	if _braking_limit(me.s_m, cap) < cap:
+		return false
+	# ...and not if it would have to brake before the boost runs out.
+	var boost_distance := me.speed_mps * params.nitro_duration_s
+	return _braking_limit(me.s_m + boost_distance, cap) >= cap
 
 
 ## Nearest car within `range_m` ahead whose body overlaps `lane_m`, or -1.
@@ -163,7 +171,7 @@ func _lane_clear(lane_m: float) -> bool:
 ## Closest clear lane to the current one, or NAN if all are blocked.
 func _free_lane() -> float:
 	var best := NAN
-	var half_width := sim.track.half_width_at(sim.cars[car].s_m) - sim.params.car_half_width_m
+	var half_width := sim.track.half_width_at(sim.cars[car].s_m) - sim.car_params[car].car_half_width_m
 	for lane: float in LANES:
 		if lane == target_lane_m or absf(lane) > half_width or not _lane_clear(lane):
 			continue
@@ -173,5 +181,5 @@ func _free_lane() -> float:
 
 
 func _overlaps_lane(other: int, lane_m: float) -> bool:
-	var reach := 2.0 * sim.params.car_half_width_m + LANE_CLEARANCE_M
+	var reach := 2.0 * sim.car_params[car].car_half_width_m + LANE_CLEARANCE_M
 	return absf(sim.cars[other].x_m - lane_m) < reach

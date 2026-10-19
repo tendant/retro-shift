@@ -6,7 +6,7 @@ OPPONENTS ?= 5
 GAME_ARGS = --track=$(TRACK) --opponents=$(OPPONENTS)
 
 .DEFAULT_GOAL := help
-.PHONY: help run autodrive debug import test clean
+.PHONY: help run race autodrive debug import test clean
 
 help: ## Show this help
 	@echo "Usage: make <target> [TRACK=name] [OPPONENTS=0-5] [GODOT=path]"
@@ -14,9 +14,12 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 	@echo
-	@echo "Tracks: basic straight s_curve hillcrest valley crest_into_curve"
+	@echo "Tracks: basic gentle hills straight s_curve hillcrest valley crest_into_curve"
 
-run: ## Play the race on TRACK
+run: ## Play from the garage (events, upgrades, saves)
+	$(GODOT) --path .
+
+race: ## Free race on TRACK (no rewards)
 	$(GODOT) --path . -- $(GAME_ARGS)
 
 autodrive: ## Watch the autopilot drive TRACK

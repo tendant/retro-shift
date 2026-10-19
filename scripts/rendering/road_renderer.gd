@@ -295,7 +295,7 @@ func _draw_debug() -> void:
 	var lines := PackedStringArray([
 		"fps %d  tick %d" % [Engine.get_frames_per_second(), sim.tick_count],
 		"s %.1f  x %.2f  v %.1f m/s" % [car.s_m, car.x_m, car.speed_mps],
-		"seg %d  k %.4f  vmax %s" % [track.segment_index_at(car.s_m), k, _kmh(VehiclePhysics.v_max(k, sim.params))],
+		"seg %d  k %.4f  vmax %s" % [track.segment_index_at(car.s_m), k, _kmh(VehiclePhysics.v_max(k, sim.car_params[RaceSimulation.PLAYER]))],
 		"vmax ahead %s" % _kmh(_v_max_ahead(car.s_m, 200.0)),
 		"track %s  L %.0f m" % [track.display_name, track.lap_length_m],
 	])
@@ -307,7 +307,7 @@ func _v_max_ahead(s: float, window_m: float) -> float:
 	var best := INF
 	var d := 0.0
 	while d <= window_m:
-		best = minf(best, VehiclePhysics.v_max(sim.track.curvature_at(s + d), sim.params))
+		best = minf(best, VehiclePhysics.v_max(sim.track.curvature_at(s + d), sim.car_params[RaceSimulation.PLAYER]))
 		d += 10.0
 	return best
 

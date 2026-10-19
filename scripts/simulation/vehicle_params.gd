@@ -28,9 +28,9 @@ extends Resource
 
 @export_group("Nitro")
 @export var nitro_count: int = 3
-@export var nitro_duration_s: float = 2.5
-@export var nitro_accel_mult: float = 1.8
-@export var nitro_speed_mult: float = 1.15
+@export var nitro_duration_s: float = 3.0
+@export var nitro_accel_mult: float = 2.0
+@export var nitro_speed_mult: float = 1.2
 
 @export_group("Body")
 @export var car_half_width_m: float = 0.9

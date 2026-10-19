@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EventDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/event_definition.gd" id="1_event"]
+
+[resource]
+script = ExtResource("1_event")
+id = &"event_1"
+display_name = "Green Valley Cup"
+track_name = &"gentle"
+laps = 3
+opponents = 5
+skill_min = 0.8
+skill_max = 0.92
+rubber_band_strength = 1.0
+reward_mult = 1.0
+unlocks = &"event_2"

@@ -5,17 +5,20 @@ Godot 4 / GDScript. Design: [retroshift-design-v0.4.md](retroshift-design-v0.4.m
 
 ## Run
 
-`make help` lists the shortcuts (`make run TRACK=s_curve`, `make debug`, `make test`, ...).
+`make help` lists the shortcuts (`make run`, `make race TRACK=s_curve`, `make debug`, `make test`, ...).
 Or call Godot directly:
 
 ```sh
-godot --path .                          # play (opens the race scene)
-godot --path . -- --track=s_curve       # pick a test track
-godot --path . -- --opponents=1         # field size, 0-5 AI (default 5)
-godot --path . -- --autodrive --debug   # hands-off drive with debug overlay
+godot --path .                          # play: garage → event → results → garage
+godot --path . -- --track=s_curve       # free race on a track (skips the garage, no rewards)
+godot --path . -- --opponents=1         # free race with 0-5 AI (default 5)
+godot --path . -- --autodrive --debug   # hands-off free race with debug overlay
 ```
 
-Tracks: `basic`, `straight`, `s_curve`, `hillcrest`, `valley`, `crest_into_curve`.
+Tracks: `basic`, `gentle`, `hills`, `straight`, `s_curve`, `hillcrest`, `valley`, `crest_into_curve`.
+
+Progress (credits, upgrades, unlocks, best results) is saved to `user://profile.json`
+(macOS: `~/Library/Application Support/Godot/app_userdata/RetroShift/`).
 
 | Action | Keyboard | Gamepad |
 |---|---|---|
@@ -23,7 +26,8 @@ Tracks: `basic`, `straight`, `s_curve`, `hillcrest`, `valley`, `crest_into_curve
 | Steer | ← → (A D) | Left stick, D-pad |
 | Nitro | Space | X or RB |
 | Pause / restart | Esc or P / R | Start / Back |
-| Debug overlay / next track | F1 or Tab / F2 | |
+| Continue (results, pause menu) | Enter | Y |
+| Debug overlay / next track (free race) | F1 or Tab / F2 | |
 
 ## Test
 
@@ -36,6 +40,9 @@ tools/run_tests.sh   # GUT, headless; same command CI runs
 - `scripts/track/` – `TrackSegment`, `Track` (lookup, continuous heading/height), test tracks, minimap
 - `scripts/simulation/` – 60 Hz `RaceSimulation` (collisions, ranking, results), vehicle model, snapshots
 - `scripts/rendering/` – camera-relative `RoadProjector`, far-to-near `RoadRenderer`, HUD
-- `scripts/core/` – race scene wiring, input bindings/adapter
+- `scripts/core/` – `Game` autoload (scene flow), race scene, input, versioned `SaveService` + storage
+- `scripts/progression/` – upgrade table, events, player profile, economy (`Progression`)
+- `scripts/ui/` – garage
+- `resources/events/` – event definitions (`.tres`)
 - `scripts/ai/` – opponent AI (v_max target speed, follow/pass lanes); also drives `--autodrive`
 - `tests/` – GUT tests

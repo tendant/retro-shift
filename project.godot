@@ -12,8 +12,12 @@ config_version=5
 
 config/name="RetroShift"
 config/description="Race. Earn. Upgrade. Repeat."
-run/main_scene="res://scenes/race.tscn"
+run/main_scene="res://scenes/garage.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+Game="*res://scripts/core/game.gd"
 
 [display]
 

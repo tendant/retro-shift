@@ -3,7 +3,8 @@ extends RefCounted
 ## Code-built tracks for development and the visual test scenes (§5, §12).
 ## These move to `resources/` as `.tres` once the format settles.
 
-const NAMES := [&"basic", &"straight", &"s_curve", &"hillcrest", &"valley", &"crest_into_curve"]
+const NAMES := [&"basic", &"gentle", &"hills", &"straight", &"s_curve", &"hillcrest", &"valley",
+		&"crest_into_curve"]
 
 
 static func make(track_name: StringName) -> Track:
@@ -38,6 +39,10 @@ static func make(track_name: StringName) -> Track:
 				_seg(110.0, 1.0 / 70.0, -12.0),
 				_seg(200.0, 0.0, 0.0, &"posts"),
 			])
+		&"gentle":
+			return _gentle()
+		&"hills":
+			return _hills()
 		_:
 			return _basic()
 
@@ -59,6 +64,52 @@ static func _basic() -> Track:
 		_seg(70.0, -1.0 / 70.0, -9.0),
 		_seg(200.0, 0.0, 0.0, &"posts"),
 	])
+
+
+## Event 1: wide sweepers and one mild hill. Turns a full 360° (right-hand
+## loop) so the minimap closes cleanly.
+static func _gentle() -> Track:
+	return _track("Green Valley", [
+		_seg(450.0, 0.0, 0.0, &"posts"),
+		_seg(300.0, 1.0 / 150.0),
+		_seg(300.0),
+		_seg(250.0, 1.0 / 200.0),
+		_seg(120.0, 0.0, 10.0),
+		_seg(120.0, 0.0, -10.0),
+		_seg(200.0, 1.0 / 120.0),
+		_seg(100.0),
+		_seg(_closing_length(1.0 / 130.0, [2.0, 1.25, 200.0 / 120.0]), 1.0 / 130.0),
+		_seg(80.0, 0.0, 0.0, &"posts"),
+	])
+
+
+## Event 2: hills, S-curves and a crest into a curve; also a full 360°.
+static func _hills() -> Track:
+	return _track("Ridge Line", [
+		_seg(400.0, 0.0, 0.0, &"posts"),
+		_seg(100.0, 0.0, 14.0),
+		_seg(100.0, 0.0, -14.0),
+		_seg(160.0, 1.0 / 80.0),
+		_seg(120.0, -1.0 / 80.0),
+		_seg(250.0),
+		_seg(80.0, 0.0, 10.0),
+		_seg(140.0, 1.0 / 70.0, -10.0),
+		_seg(80.0, 0.0, -8.0),
+		_seg(80.0, 0.0, 8.0),
+		_seg(150.0, 1.0 / 100.0),
+		_seg(90.0, -1.0 / 90.0),
+		_seg(_closing_length(1.0 / 90.0, [2.0, -1.5, 2.0, 1.5, -1.0]), 1.0 / 90.0),
+		_seg(100.0, 0.0, 0.0, &"posts"),
+	])
+
+
+## Length of a final curve of `curvature` that brings the heading turned by
+## `turns` (radians) up to a full right-hand loop.
+static func _closing_length(curvature: float, turns: Array) -> float:
+	var turned := 0.0
+	for t: float in turns:
+		turned += t
+	return (TAU - turned) / curvature
 
 
 static func _track(display_name: String, segs: Array) -> Track:

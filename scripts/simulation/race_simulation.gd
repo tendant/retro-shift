@@ -34,7 +34,10 @@ const RUBBER_BAND_FULL_M := 300.0
 const RUBBER_BAND_MAX_BONUS := 0.05
 
 var track: Track
+## Opponents' tuning; the player's (upgraded) car may differ, see car_params.
 var params: VehicleParams
+## Per-car tuning used by physics and AI.
+var car_params: Array[VehicleParams] = []
 ## Per car, anything with `read(into: DrivingInput, dt: float)`, or null.
 var input_sources: Array[Object] = []
 var cars: Array[VehicleState] = []
@@ -62,9 +65,10 @@ var _prev := RaceSnapshot.new()
 var _curr := RaceSnapshot.new()
 
 
-## Starts a new race. Returns the track's validation errors (empty on success).
+## Starts a new race. `player_params` (upgrades) defaults to `p_params`.
+## Returns the track's validation errors (empty on success).
 func setup(p_track: Track, p_params: VehicleParams, player_input: Object = null,
-		car_count: int = 1) -> PackedStringArray:
+		car_count: int = 1, player_params: VehicleParams = null) -> PackedStringArray:
 	var errors := p_track.build()
 	if not errors.is_empty():
 		for e in errors:
@@ -81,13 +85,16 @@ func setup(p_track: Track, p_params: VehicleParams, player_input: Object = null,
 	cars.clear()
 	inputs.clear()
 	input_sources.clear()
+	car_params.clear()
 	for i in car_count:
 		var slot := car_count - 1 if i == PLAYER else i - 1
+		var tuning := player_params if i == PLAYER and player_params != null else params
 		var state := VehicleState.new()
 		state.s_m = GRID_FIRST_S - slot * GRID_SPACING_S
 		state.x_m = GRID_LANE_OFFSET_M * (1.0 if slot % 2 == 0 else -1.0)
-		state.nitro_remaining = params.nitro_count
+		state.nitro_remaining = tuning.nitro_count
 		cars.append(state)
+		car_params.append(tuning)
 		inputs.append(DrivingInput.new())
 		input_sources.append(null)
 	input_sources[PLAYER] = player_input
@@ -136,7 +143,7 @@ func tick() -> void:
 
 	for i in cars.size():
 		var laps_before := completed_laps(i)
-		if VehiclePhysics.step(cars[i], inputs[i], params, track, TICK_DT, top_speed_mult[i]):
+		if VehiclePhysics.step(cars[i], inputs[i], car_params[i], track, TICK_DT, top_speed_mult[i]):
 			nitro_fired.emit(i)
 		var laps_after := completed_laps(i)
 		if laps_after > laps_before:
@@ -212,7 +219,6 @@ func _update_rubber_band() -> void:
 ## backward and lap counts can't be corrupted.
 func _resolve_collisions() -> void:
 	var reach := 2.0 * params.car_half_width_m
-	var lat_cap := params.lateral_speed_cap_mps
 	for a in cars.size():
 		for b in range(a + 1, cars.size()):
 			var ds := gap_ahead(a, b)
@@ -236,8 +242,10 @@ func _resolve_collisions() -> void:
 			var separating := (car_b.lateral_speed_mps - car_a.lateral_speed_mps) * dir
 			if separating < COLLISION_LATERAL_IMPULSE_MPS:
 				var kick := 0.5 * (COLLISION_LATERAL_IMPULSE_MPS - separating) * dir
-				car_a.lateral_speed_mps = clampf(car_a.lateral_speed_mps - kick, -lat_cap, lat_cap)
-				car_b.lateral_speed_mps = clampf(car_b.lateral_speed_mps + kick, -lat_cap, lat_cap)
+				var cap_a := car_params[a].lateral_speed_cap_mps
+				var cap_b := car_params[b].lateral_speed_cap_mps
+				car_a.lateral_speed_mps = clampf(car_a.lateral_speed_mps - kick, -cap_a, cap_a)
+				car_b.lateral_speed_mps = clampf(car_b.lateral_speed_mps + kick, -cap_b, cap_b)
 
 
 ## Finished cars first in finishing order, then the rest by distance (§7).
