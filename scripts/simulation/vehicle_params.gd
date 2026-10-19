@@ -27,7 +27,11 @@ extends Resource
 @export var lateral_speed_cap_mps: float = 18.0
 
 @export_group("Off-road")
+## Off-road drag at or above off_road_drag_full_speed_mps; it ramps up from
+## zero at standstill so a car stopped on the grass can always pull away.
+## Balance against engine_accel sets the off-road top speed (~18 m/s).
 @export var off_road_drag_mps2: float = 14.0
+@export var off_road_drag_full_speed_mps: float = 20.0
 @export var off_road_grip_mult: float = 0.55
 ## How far past the road edge a car can go before hitting the soft wall.
 @export var off_road_limit_m: float = 7.0

@@ -40,7 +40,7 @@ static func step(state: VehicleState, input: DrivingInput, params: VehicleParams
 	if speed > 0.0:
 		forward_accel -= params.rolling_drag_mps2 + params.aero_drag_per_m * speed * speed
 		if off_road:
-			forward_accel -= params.off_road_drag_mps2
+			forward_accel -= params.off_road_drag_mps2 * minf(1.0, speed / params.off_road_drag_full_speed_mps)
 	var cap := params.max_speed_mps * top_speed_mult * (params.nitro_speed_mult if boost else 1.0)
 	var new_speed := speed + forward_accel * dt
 	if speed <= cap:

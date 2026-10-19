@@ -98,6 +98,24 @@ func test_off_road_slows_and_is_recoverable() -> void:
 	assert_false(VehiclePhysics.is_off_road(state, track), "back on the road within 10 s")
 
 
+func test_stopped_off_road_can_pull_away_and_rejoin() -> void:
+	var track := _curve_track(0.0)
+	var params := VehicleParams.new()
+	var state := VehicleState.new()
+	state.x_m = track.half_width_at(0.0) + params.off_road_limit_m
+	var input := DrivingInput.new()
+	input.throttle = 1.0
+	for i in 60:
+		VehiclePhysics.step(state, input, params, track, DT)
+	assert_gt(state.speed_mps, 8.0, "pulls away from standstill off-road")
+	input.steer = -1.0
+	for i in 300:
+		if not VehiclePhysics.is_off_road(state, track):
+			break
+		VehiclePhysics.step(state, input, params, track, DT)
+	assert_false(VehiclePhysics.is_off_road(state, track), "back on the road within 5 s")
+
+
 func test_nitro_is_limited_and_raises_speed_cap() -> void:
 	var track := _curve_track(0.0)
 	var params := VehicleParams.new()
