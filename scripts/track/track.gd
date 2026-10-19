@@ -11,6 +11,8 @@ const MAX_ABS_GRADE := 0.4
 
 @export var display_name: String = ""
 @export var laps: int = 3
+## Look of the track; null uses TrackPalette's defaults.
+@export var palette: TrackPalette
 @export var segments: Array[TrackSegment] = []
 
 var lap_length_m: float = 0.0

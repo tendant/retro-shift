@@ -1,0 +1,81 @@
+[gd_resource type="Resource" script_class="Track" format=3]
+
+[ext_resource type="Script" path="res://scripts/track/track_palette.gd" id="1_ofvdh"]
+[ext_resource type="Script" path="res://scripts/track/track.gd" id="2_1eypo"]
+[ext_resource type="Script" path="res://scripts/track/track_segment.gd" id="3_86fop"]
+
+[sub_resource type="Resource" id="Resource_dwswd"]
+script = ExtResource("1_ofvdh")
+sky_top = Color(0.21960784, 0.23529412, 0.54901963, 1)
+sky_horizon = Color(0.972549, 0.65882355, 0.47058824, 1)
+far_layer = &"sea"
+show_hills = false
+grass_light = Color(0.4862745, 0.65882355, 0.36078432, 1)
+grass_dark = Color(0.43137255, 0.59607846, 0.3137255, 1)
+road_light = Color(0.38431373, 0.3764706, 0.4392157, 1)
+road_dark = Color(0.3529412, 0.34509805, 0.40784314, 1)
+
+[sub_resource type="Resource" id="Resource_avmk7"]
+script = ExtResource("3_86fop")
+length_m = 300.0
+road_half_width_m = 5.5
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_rndd5"]
+script = ExtResource("3_86fop")
+length_m = 600.0
+curvature_rad_per_m = 0.006666666666666667
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_w51ly"]
+script = ExtResource("3_86fop")
+length_m = 100.0
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_fglns"]
+script = ExtResource("3_86fop")
+length_m = 80.0
+elevation_delta_m = 8.0
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_h4myj"]
+script = ExtResource("3_86fop")
+length_m = 80.0
+elevation_delta_m = -8.0
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_ggipu"]
+script = ExtResource("3_86fop")
+length_m = 150.0
+curvature_rad_per_m = -0.008333333333333333
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_3gvh6"]
+script = ExtResource("3_86fop")
+length_m = 150.0
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_lyco2"]
+script = ExtResource("3_86fop")
+length_m = 388.6503837897545
+curvature_rad_per_m = 0.00909090909090909
+road_half_width_m = 5.5
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_bjjod"]
+script = ExtResource("3_86fop")
+length_m = 250.0
+road_half_width_m = 5.5
+scenery_id = &"posts"
+
+[resource]
+script = ExtResource("2_1eypo")
+display_name = "Lighthouse Loop"
+palette = SubResource("Resource_dwswd")
+segments = Array[ExtResource("3_86fop")]([SubResource("Resource_avmk7"), SubResource("Resource_rndd5"), SubResource("Resource_w51ly"), SubResource("Resource_fglns"), SubResource("Resource_h4myj"), SubResource("Resource_ggipu"), SubResource("Resource_3gvh6"), SubResource("Resource_lyco2"), SubResource("Resource_bjjod")])

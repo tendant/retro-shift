@@ -7,13 +7,12 @@ extends Node2D
 ## paint over whatever lies beyond a crest, so no clipping buffer is needed.
 ## Reads only the interpolated snapshot; never advances the simulation.
 
-const SKY_TOP := Color8(48, 88, 192)
-const SKY_HORIZON := Color8(168, 204, 244)
 const SKY_BANDS := 8
-const GRASS := [Color8(64, 156, 64), Color8(54, 140, 56)]
-const RUMBLE := [Color8(236, 236, 236), Color8(206, 44, 44)]
-const ROAD := [Color8(108, 108, 118), Color8(100, 100, 110)]
-const LANE := Color8(240, 240, 240)
+const DEFAULT_PALETTE := preload("res://scripts/track/track_palette.gd")
+const FAR_LAYERS := {
+	&"mountains": SpriteAtlas.BG_MOUNTAINS,
+	&"sea": SpriteAtlas.BG_SEA,
+}
 const FLAME := [Color8(255, 236, 140), Color8(255, 150, 40), Color8(120, 200, 255)]
 const DEBUG := Color8(255, 240, 0)
 const DEBUG_EDGE := Color8(0, 255, 255)
@@ -24,6 +23,7 @@ const CAR_WIDTH_M := 2.0
 const SCENERY_PX_PER_M := 8.0
 const RUMBLE_WIDTH_FRAC := 0.12
 const TREE_KINDS := [&"pine_a", &"pine_a", &"pine_b", &"pine_b", &"pine_a", &"bush", &"bush", &"rock"]
+const PALM_KINDS := [&"palm_a", &"palm_b", &"palm_a", &"palm_b", &"bush", &"rock"]
 const BILLBOARDS := [&"billboard_retroshift", &"billboard_nitro", &"billboard_upgrade"]
 ## Chevron signs mark curves at least this tight.
 const CHEVRON_MIN_CURVATURE := 1.0 / 130.0
@@ -50,6 +50,12 @@ var debug_enabled: bool = false
 
 var _projector: RoadProjector
 var _cam_x: float = 0.0
+var _palette: TrackPalette = DEFAULT_PALETTE.new()
+var _palette_track: Track
+# Two-tone stripe colors from the palette, indexed by stripe parity.
+var _grass: Array[Color] = []
+var _road: Array[Color] = []
+var _rumble: Array[Color] = []
 ## Smoothed CPU time (ms) of build + draw, shown in the debug overlay.
 var _cpu_ms: float = 0.0
 var _frame_start_us: int = 0
@@ -80,6 +86,9 @@ func _process(delta: float) -> void:
 	if sim == null or sim.track == null:
 		return
 	_frame_start_us = Time.get_ticks_usec()
+	if _palette_track != sim.track:
+		_apply_palette(sim.track.palette if sim.track.palette != null else DEFAULT_PALETTE.new())
+		_palette_track = sim.track
 	var alpha := 1.0 if get_tree().paused else Engine.get_physics_interpolation_fraction()
 	_interpolate(alpha)
 	_cam_x = lerpf(_cam_x, _car_x[RaceSimulation.PLAYER], 1.0 - exp(-cam_lateral_follow_rate * delta))
@@ -131,16 +140,24 @@ func _draw() -> void:
 		_draw_debug()
 
 
+func _apply_palette(palette: TrackPalette) -> void:
+	_palette = palette
+	_grass = [palette.grass_light, palette.grass_dark]
+	_road = [palette.road_light, palette.road_dark]
+	_rumble = [palette.rumble_light, palette.rumble_dark]
+
+
 func _draw_background(view: Vector2) -> void:
 	var horizon := _projector.center.y
 	var band_h := ceilf(horizon / SKY_BANDS)
 	for b in SKY_BANDS:
-		var color := SKY_TOP.lerp(SKY_HORIZON, float(b) / (SKY_BANDS - 1))
+		var color := _palette.sky_top.lerp(_palette.sky_horizon, float(b) / (SKY_BANDS - 1))
 		draw_rect(Rect2(0, b * band_h, view.x, band_h), color)
 	_draw_layer(SpriteAtlas.BG_CLOUDS, view, horizon - 70.0, 0.3)
-	_draw_layer(SpriteAtlas.BG_MOUNTAINS, view, horizon + 1.0, 0.5)
-	_draw_layer(SpriteAtlas.BG_HILLS, view, horizon + 1.0, 1.0)
-	draw_rect(Rect2(0, horizon, view.x, view.y - horizon), GRASS[1])
+	_draw_layer(FAR_LAYERS.get(_palette.far_layer, SpriteAtlas.BG_MOUNTAINS), view, horizon + 1.0, 0.5)
+	if _palette.show_hills:
+		_draw_layer(SpriteAtlas.BG_HILLS, view, horizon + 1.0, 1.0)
+	draw_rect(Rect2(0, horizon, view.x, view.y - horizon), _grass[1])
 
 
 ## Tiles a parallax strip whose bottom sits at `bottom_y`; `depth` < 1
@@ -163,13 +180,13 @@ func _draw_strip(i: int, view: Vector2) -> bool:
 	if near_c.z <= 0.0 or far_c.z <= 0.0 or near_c.y <= far_c.y:
 		return false
 	var stripe := posmod(floori(p.s_m[i] / stripe_len_m), 2)
-	draw_rect(Rect2(0.0, far_c.y, view.x, near_c.y - far_c.y), GRASS[stripe])
+	draw_rect(Rect2(0.0, far_c.y, view.x, near_c.y - far_c.y), _grass[stripe])
 	var hw := p.half_width[i]
 	var rumble := hw * (1.0 + RUMBLE_WIDTH_FRAC)
-	_draw_road_quad(i, -rumble, rumble, RUMBLE[stripe])
-	_draw_road_quad(i, -hw, hw, ROAD[stripe])
+	_draw_road_quad(i, -rumble, rumble, _rumble[stripe])
+	_draw_road_quad(i, -hw, hw, _road[stripe])
 	if stripe == 0:
-		_draw_road_quad(i, -LANE_HALF_WIDTH_M, LANE_HALF_WIDTH_M, LANE)
+		_draw_road_quad(i, -LANE_HALF_WIDTH_M, LANE_HALF_WIDTH_M, _palette.lane)
 	return true
 
 
@@ -222,8 +239,9 @@ func _draw_scenery_on_strip(i: int) -> void:
 		var h := _hash(n)
 		var side := 1.0 if posmod(n, 2) == 0 else -1.0
 		match seg.scenery_id:
-			&"trees":
-				var kind: StringName = TREE_KINDS[h % TREE_KINDS.size()]
+			&"trees", &"palms":
+				var kinds: Array = TREE_KINDS if seg.scenery_id == &"trees" else PALM_KINDS
+				var kind: StringName = kinds[h % kinds.size()]
 				var lateral := side * (rumble + 3.0 + float(h % 7))
 				_draw_scenery(kind, p.project_on_road(s, lateral))
 			&"posts":

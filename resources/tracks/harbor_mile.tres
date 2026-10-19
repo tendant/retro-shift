@@ -1,0 +1,80 @@
+[gd_resource type="Resource" script_class="Track" format=3]
+
+[ext_resource type="Script" path="res://scripts/track/track_palette.gd" id="1_55cbm"]
+[ext_resource type="Script" path="res://scripts/track/track.gd" id="2_usibm"]
+[ext_resource type="Script" path="res://scripts/track/track_segment.gd" id="3_ikes5"]
+
+[sub_resource type="Resource" id="Resource_8imn1"]
+script = ExtResource("1_55cbm")
+sky_top = Color(0.15686275, 0.40784314, 0.84705883, 1)
+sky_horizon = Color(0.72156864, 0.8784314, 0.972549, 1)
+far_layer = &"sea"
+show_hills = false
+grass_light = Color(0.8784314, 0.8, 0.5647059, 1)
+grass_dark = Color(0.83137256, 0.74509805, 0.5019608, 1)
+
+[sub_resource type="Resource" id="Resource_7dbu3"]
+script = ExtResource("3_ikes5")
+length_m = 650.0
+road_half_width_m = 6.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_v055q"]
+script = ExtResource("3_ikes5")
+length_m = 250.0
+curvature_rad_per_m = 0.008333333333333333
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_fq2b7"]
+script = ExtResource("3_ikes5")
+length_m = 420.0
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_04de6"]
+script = ExtResource("3_ikes5")
+length_m = 180.0
+curvature_rad_per_m = 0.011111111111111112
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_e1awc"]
+script = ExtResource("3_ikes5")
+length_m = 80.0
+elevation_delta_m = 6.0
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_7nel5"]
+script = ExtResource("3_ikes5")
+length_m = 80.0
+elevation_delta_m = -6.0
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_1dgtp"]
+script = ExtResource("3_ikes5")
+length_m = 100.0
+curvature_rad_per_m = -0.005
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_yoiw7"]
+script = ExtResource("3_ikes5")
+length_m = 269.9851973846252
+curvature_rad_per_m = 0.01
+road_half_width_m = 6.0
+scenery_id = &"palms"
+
+[sub_resource type="Resource" id="Resource_ejjsm"]
+script = ExtResource("3_ikes5")
+length_m = 120.0
+road_half_width_m = 6.0
+scenery_id = &"posts"
+
+[resource]
+script = ExtResource("2_usibm")
+display_name = "Harbor Mile"
+palette = SubResource("Resource_8imn1")
+segments = Array[ExtResource("3_ikes5")]([SubResource("Resource_7dbu3"), SubResource("Resource_v055q"), SubResource("Resource_fq2b7"), SubResource("Resource_04de6"), SubResource("Resource_e1awc"), SubResource("Resource_7nel5"), SubResource("Resource_1dgtp"), SubResource("Resource_yoiw7"), SubResource("Resource_ejjsm")])

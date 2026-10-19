@@ -81,7 +81,7 @@ func test_grade_matches_height_derivative() -> void:
 		assert_almost_eq(track.grade_at(s), numeric, 1e-4)
 
 
-func test_all_test_tracks_build() -> void:
-	for track_name: StringName in TestTracks.NAMES:
-		var track := TestTracks.make(track_name)
+func test_all_tracks_build() -> void:
+	for track_name in TrackLibrary.names():
+		var track := TrackLibrary.make(track_name)
 		assert_eq(track.build(), PackedStringArray(), String(track_name))

@@ -51,7 +51,7 @@ func _ready() -> void:
 	_event = Game.current_event
 	_free_race = _event == null
 	if _free_race:
-		_track_index = maxi(0, TestTracks.NAMES.find(StringName(_cmdline_value("--track="))))
+		_track_index = maxi(0, TrackLibrary.names().find(StringName(_cmdline_value("--track="))))
 		_event = _free_race_event()
 	_start_race()
 
@@ -71,7 +71,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"toggle_debug"):
 		_renderer.debug_enabled = not _renderer.debug_enabled
 	elif event.is_action_pressed(&"next_track") and _free_race:
-		_track_index = (_track_index + 1) % TestTracks.NAMES.size()
+		_track_index = (_track_index + 1) % TrackLibrary.names().size()
 		_event = _free_race_event()
 		_start_race()
 
@@ -101,7 +101,8 @@ func _start_race() -> void:
 	_hud.result_notes = PackedStringArray()
 	_menu.hide_menu()
 
-	var track := TestTracks.make(_event.track_name)
+	# A copy, so per-race changes never touch the shared resource.
+	var track: Track = _event.track.duplicate()
 	track.laps = _event.laps
 	var opponents := _event.opponents
 	_sim.setup(track, Game.progression.base_params, PlayerInputAdapter.new(), opponents + 1,
@@ -134,6 +135,8 @@ func _on_results_ready() -> void:
 	var notes := PackedStringArray(["+%d credits" % award.credits])
 	if award.new_best:
 		notes.append("New best!")
+	if award.trophy > 0:
+		notes.append("%s trophy! +%d" % [Progression.TROPHY_NAMES[award.trophy], award.trophy_bonus])
 	if award.unlocked != &"":
 		var unlocked := Game.event_by_id(award.unlocked)
 		notes.append("Unlocked: %s" % (unlocked.display_name if unlocked else String(award.unlocked)))
@@ -144,7 +147,7 @@ func _on_results_ready() -> void:
 func _free_race_event() -> EventDefinition:
 	var event := EventDefinition.new()
 	event.display_name = "Free race"
-	event.track_name = TestTracks.NAMES[_track_index]
+	event.track = TrackLibrary.make(TrackLibrary.names()[_track_index])
 	var opponents_arg := _cmdline_value("--opponents=")
 	if opponents_arg.is_valid_int():
 		event.opponents = clampi(opponents_arg.to_int(), 0, 5)

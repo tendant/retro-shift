@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="CupDefinition" format=3]
+
+[ext_resource type="Script" path="res://scripts/progression/cup_definition.gd" id="1_cup"]
+[ext_resource type="Script" path="res://scripts/progression/event_definition.gd" id="5_event_script"]
+[ext_resource type="Resource" path="res://resources/events/harbor_mile.tres" id="2_e1"]
+[ext_resource type="Resource" path="res://resources/events/lighthouse_loop.tres" id="3_e2"]
+[ext_resource type="Resource" path="res://resources/events/cliffside_run.tres" id="4_e3"]
+
+[resource]
+script = ExtResource("1_cup")
+id = &"sunrise_coast"
+display_name = "Sunrise Coast Cup"
+events = Array[ExtResource("5_event_script")]([ExtResource("2_e1"), ExtResource("3_e2"), ExtResource("4_e3")])
+trophy_bonus = Array[int]([300, 500, 800])
+silver_points = 18
+gold_points = 26
+unlocks = &""

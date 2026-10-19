@@ -2,8 +2,8 @@ extends GutTest
 
 
 func test_outline_is_closed_and_normalized() -> void:
-	for track_name: StringName in TestTracks.NAMES:
-		var track := TestTracks.make(track_name)
+	for track_name in TrackLibrary.names():
+		var track := TrackLibrary.make(track_name)
 		track.build()
 		var minimap := Minimap.new(track)
 		var pts := minimap.points

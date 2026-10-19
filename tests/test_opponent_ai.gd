@@ -22,7 +22,7 @@ class SlowCar:
 func _ai_race(track_name: StringName, car_count: int) -> RaceSimulation:
 	var sim := RaceSimulation.new()
 	autofree(sim)
-	sim.setup(TestTracks.make(track_name), VehicleParams.new(), null, car_count)
+	sim.setup(TrackLibrary.make(track_name), VehicleParams.new(), null, car_count)
 	for car in car_count:
 		var lane: float = OpponentAI.LANES[car % OpponentAI.LANES.size()]
 		sim.set_input_source(car, OpponentAI.new(sim, car, lerpf(0.86, 1.0, car / 5.0), lane))
@@ -30,7 +30,7 @@ func _ai_race(track_name: StringName, car_count: int) -> RaceSimulation:
 
 
 func test_ai_stays_on_road_on_all_test_tracks() -> void:
-	for track_name: StringName in TestTracks.NAMES:
+	for track_name in TrackLibrary.names():
 		var sim := _ai_race(track_name, 6)
 		var worst := -INF
 		for i in 60 * 60:

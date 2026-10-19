@@ -2,7 +2,7 @@ class_name PlayerProfile
 extends RefCounted
 ## Persistent player progress (§8). Plain data; SaveService owns the format.
 
-const FIRST_EVENT := &"event_1"
+const FIRST_EVENT := &"harbor_mile"
 
 var credits: int = 0
 ## {line: level}
@@ -10,6 +10,8 @@ var upgrades: Dictionary = {}
 var unlocked_events: Array[StringName] = [FIRST_EVENT]
 ## {event_id: {"place": int, "time_s": float}}
 var best_results: Dictionary = {}
+## {cup_id: trophy tier}, 1 = bronze, 2 = silver, 3 = gold.
+var trophies: Dictionary = {}
 var settings: Dictionary = {}
 
 
@@ -36,11 +38,15 @@ func to_dict() -> Dictionary:
 	var best := {}
 	for event_id: StringName in best_results:
 		best[String(event_id)] = best_results[event_id].duplicate()
+	var cup_trophies := {}
+	for cup_id: StringName in trophies:
+		cup_trophies[String(cup_id)] = trophies[cup_id]
 	return {
 		"credits": credits,
 		"upgrades": ups,
 		"unlocked_events": unlocked,
 		"best_results": best,
+		"trophies": cup_trophies,
 		"settings": settings.duplicate(true),
 	}
 
@@ -71,6 +77,13 @@ static func from_dict(data: Dictionary) -> PlayerProfile:
 				var time_s: Variant = entry.get("time_s")
 				if place >= 1 and (time_s is float or time_s is int) and is_finite(time_s) and time_s > 0.0:
 					profile.best_results[StringName(event_id)] = {"place": place, "time_s": float(time_s)}
+
+	var cup_trophies: Variant = data.get("trophies")
+	if cup_trophies is Dictionary:
+		for cup_id: Variant in cup_trophies:
+			var tier := clampi(_to_int(cup_trophies[cup_id], 0), 0, Progression.GOLD)
+			if cup_id is String and tier > 0:
+				profile.trophies[StringName(cup_id)] = tier
 
 	var settings: Variant = data.get("settings")
 	if settings is Dictionary:

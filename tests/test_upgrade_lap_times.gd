@@ -1,6 +1,6 @@
 extends GutTest
 ## Each upgrade level must produce a measurable lap-time change (§12),
-## measured with the AI driving the player car alone on the Event 1 track.
+## measured with the AI driving the player car alone on the first event track.
 
 const MIN_GAIN_S := 0.1
 
@@ -9,7 +9,7 @@ func _race_time(levels: Dictionary) -> float:
 	var sim := RaceSimulation.new()
 	autofree(sim)
 	var base := VehicleParams.new()
-	sim.setup(TestTracks.make(&"gentle"), base, null, 1, Upgrades.apply(base, levels))
+	sim.setup(TrackLibrary.make(&"harbor_mile"), base, null, 1, Upgrades.apply(base, levels))
 	sim.set_input_source(0, OpponentAI.new(sim, 0, 1.0))
 	while not sim.is_finished(0) and sim.tick_count < 60 * 600:
 		sim.tick()

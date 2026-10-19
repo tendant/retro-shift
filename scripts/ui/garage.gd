@@ -17,6 +17,8 @@ var _ui_theme := Theme.new()
 var _scale: int = 1
 var _credits: Label
 var _event_buttons: Array[Button] = []
+## {cup_id: Label} header with points and trophy.
+var _cup_labels: Dictionary = {}
 ## {line: {"level": Label, "effect": Label, "buy": Button}}
 var _rows: Dictionary = {}
 var _music_button: Button
@@ -70,12 +72,15 @@ func _build() -> void:
 	_credits = _label("", TEXT)
 	box.add_child(_credits)
 
-	box.add_child(_label("EVENTS", DIM))
-	for event in Game.events:
-		var button := _button()
-		button.pressed.connect(_start_event.bind(event))
-		box.add_child(button)
-		_event_buttons.append(button)
+	for cup in Game.cups:
+		var header := _label("", DIM)
+		box.add_child(header)
+		_cup_labels[cup.id] = header
+		for event in cup.events:
+			var button := _button()
+			button.pressed.connect(_start_event.bind(event))
+			box.add_child(button)
+			_event_buttons.append(button)
 
 	box.add_child(_label("UPGRADES", DIM))
 	var grid := GridContainer.new()
@@ -113,6 +118,10 @@ func _build() -> void:
 func _refresh() -> void:
 	var profile := Game.progression.profile
 	_credits.text = "CREDITS  %d" % profile.credits
+	for cup in Game.cups:
+		var trophy: int = profile.trophies.get(cup.id, 0)
+		var trophy_text := "" if trophy == 0 else "   %s TROPHY" % Progression.TROPHY_NAMES[trophy]
+		_cup_labels[cup.id].text = "%s   %d PTS%s" % [cup.display_name, Game.progression.cup_points(cup), trophy_text]
 	for i in Game.events.size():
 		var event := Game.events[i]
 		var button := _event_buttons[i]

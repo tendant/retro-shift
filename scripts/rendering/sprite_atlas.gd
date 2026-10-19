@@ -8,6 +8,7 @@ const HUD := preload("res://assets/sprites/hud.png")
 const BG_CLOUDS := preload("res://assets/sprites/bg_clouds.png")
 const BG_MOUNTAINS := preload("res://assets/sprites/bg_mountains.png")
 const BG_HILLS := preload("res://assets/sprites/bg_hills.png")
+const BG_SEA := preload("res://assets/sprites/bg_sea.png")
 
 const CAR_SIZE := Vector2(48, 30)
 const CAR_COLORS := 7
@@ -18,11 +19,13 @@ const SCENERY_RECTS := {
 	&"pine_a": Rect2(0, 0, 32, 64),
 	&"pine_b": Rect2(33, 0, 32, 64),
 	&"bush": Rect2(66, 0, 24, 14),
-	&"rock": Rect2(91, 0, 20, 12),
-	&"post": Rect2(112, 0, 6, 24),
-	&"chevron_right": Rect2(119, 0, 18, 24),
-	&"chevron_left": Rect2(138, 0, 18, 24),
-	&"gantry_pillar": Rect2(157, 0, 8, 64),
+	&"palm_a": Rect2(91, 0, 40, 64),
+	&"palm_b": Rect2(132, 0, 40, 64),
+	&"rock": Rect2(173, 0, 20, 12),
+	&"post": Rect2(194, 0, 6, 24),
+	&"chevron_right": Rect2(201, 0, 18, 24),
+	&"chevron_left": Rect2(220, 0, 18, 24),
+	&"gantry_pillar": Rect2(239, 0, 8, 64),
 	&"gantry_banner": Rect2(0, 65, 96, 16),
 	&"billboard_retroshift": Rect2(97, 65, 74, 36),
 	&"billboard_nitro": Rect2(172, 65, 64, 36),

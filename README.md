@@ -15,7 +15,8 @@ godot --path . -- --opponents=1         # free race with 0-5 AI (default 5)
 godot --path . -- --autodrive --debug   # hands-off free race with debug overlay
 ```
 
-Tracks: `basic`, `gentle`, `hills`, `straight`, `s_curve`, `hillcrest`, `valley`, `crest_into_curve`.
+Tracks: `harbor_mile`, `lighthouse_loop`, `cliffside_run` (championship, `resources/tracks/*.tres`),
+plus dev tracks `basic`, `straight`, `s_curve`, `hillcrest`, `valley`, `crest_into_curve`.
 
 Progress (credits, upgrades, unlocks, best results) is saved to `user://profile.json`
 (macOS: `~/Library/Application Support/Godot/app_userdata/RetroShift/`).
@@ -42,7 +43,7 @@ godot --path . -- --touch --safe-area=88,0,88,32   # left, top, right, bottom in
 Building for devices (`export_presets.cfg` has iOS and Android presets):
 
 1. Install Godot 4.7.2 export templates (Editor → Manage Export Templates).
-2. Set your bundle ID (`com.example.retroshift` is a placeholder) and, for iOS, your Apple team ID.
+2. The bundle ID is `ai.weilabs.retroshift`; for iOS, set your Apple team ID in the preset.
 3. iOS: Xcode with the device paired. Android: JDK 17 and the Android SDK set in Editor Settings.
 4. `godot --headless --export-debug "iOS"` (or `"Android"`); builds go to `build/` (ignored).
 

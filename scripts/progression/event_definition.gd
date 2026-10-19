@@ -4,7 +4,7 @@ extends Resource
 
 @export var id: StringName
 @export var display_name: String = ""
-@export var track_name: StringName = &"basic"
+@export var track: Track
 @export var laps: int = 3
 @export_range(0, 5) var opponents: int = 5
 ## Opponent skill spread (§7); the first opponent is the weakest.

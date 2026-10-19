@@ -147,6 +147,39 @@ def pine(seed):
     return c
 
 
+def palm(lean, seed):
+    """Curved trunk with drooping fronds; `lean` > 0 bends right."""
+    rng = random.Random(seed)
+    c = Canvas(40, 64)
+    trunk = [hex_color(h) for h in ("6a4424", "8c5e30", "b07c44")]
+    top_x, top_y = 20 + lean * 6, 12
+    for y in range(top_y, 62):
+        t = (62 - y) / (62 - top_y)
+        x = int(round(20 + lean * 6 * t * t))
+        w = 3 if y > 30 else 2
+        c.rect(x - w // 2, y, w, 1, trunk[1])
+        c.set(x - w // 2, y, trunk[0])
+        if y % 4 == 0:
+            c.hline(x - w // 2, x + w // 2, y, trunk[2])  # ring marks
+    greens = [hex_color(h) for h in ("145a2c", "23803c", "47a854")]
+    for angle in (-170, -140, -110, -70, -40, -10, 200, 230):
+        a = math.radians(angle + rng.uniform(-8, 8))
+        length = rng.uniform(13, 17)
+        for i in range(int(length)):
+            t = i / length
+            x = top_x + math.cos(a) * i
+            y = top_y + math.sin(a) * i + 7 * t * t  # fronds droop
+            shade = greens[2] if t < 0.3 else greens[1]
+            c.set(int(x), int(y), shade)
+            c.set(int(x), int(y) + 1, greens[0])
+            if 0.2 < t < 0.85:
+                c.set(int(x), int(y) + 2, greens[0])
+    c.ellipse(top_x, top_y + 1, 2.5, 2, hex_color("5a3a1c"))  # coconuts
+    c.ellipse(20, 62, 8, 1.5, SHADOW)
+    c.outline(OUTLINE)
+    return c
+
+
 def bush():
     c = Canvas(24, 14)
     g = [hex_color(h) for h in ("185c2c", "2a8040", "52a860")]
@@ -271,6 +304,30 @@ def hills():
         if rng.random() < 0.25:
             for y in range(top - 3, top + 1):
                 c.set(x, y, g[0])  # tree tufts on the ridge
+    return c
+
+
+def sea():
+    """Ocean to the horizon with a distant island; sits on the horizon line."""
+    w, h = 256, 24
+    c = Canvas(w, h)
+    deep, mid, light = hex_color("2c5a9c"), hex_color("3c78bc"), hex_color("a8d8f0")
+    island = hex_color("4c6a7c")
+    terms = [(1, 5, 0.4), (3, 2, 1.3)]
+    for x in range(w):
+        top = int(8 - max(0.0, tile_noise(x, w, terms)))
+        if top < 8:
+            for y in range(top, 9):
+                c.set(x, y, island)
+    for y in range(9, h):
+        t = (y - 9) / (h - 10)
+        for x in range(w):
+            c.set(x, y, mid if t < 0.5 else deep)
+    rng = random.Random(9)
+    for _ in range(40):
+        x, y = rng.randint(0, w - 1), rng.randint(10, h - 2)
+        for dx in range(rng.randint(2, 5)):
+            c.set((x + dx) % w, y, light)
     return c
 
 
@@ -432,6 +489,7 @@ const HUD := preload("res://assets/sprites/hud.png")
 const BG_CLOUDS := preload("res://assets/sprites/bg_clouds.png")
 const BG_MOUNTAINS := preload("res://assets/sprites/bg_mountains.png")
 const BG_HILLS := preload("res://assets/sprites/bg_hills.png")
+const BG_SEA := preload("res://assets/sprites/bg_sea.png")
 
 const CAR_SIZE := Vector2({CAR_W}, {CAR_H})
 const CAR_COLORS := {len(CAR_COLORS)}
@@ -463,6 +521,8 @@ def main():
         "pine_a": pine(1),
         "pine_b": pine(2),
         "bush": bush(),
+        "palm_a": palm(1, 4),
+        "palm_b": palm(-1, 5),
         "rock": rock(),
         "post": marker_post(),
         "chevron_right": chevron,
@@ -489,6 +549,7 @@ def main():
 
     app_icon().save(os.path.join(ROOT, "assets", "icon.png"))
     clouds().save(os.path.join(OUT_DIR, "bg_clouds.png"))
+    sea().save(os.path.join(OUT_DIR, "bg_sea.png"))
     mountains().save(os.path.join(OUT_DIR, "bg_mountains.png"))
     hills().save(os.path.join(OUT_DIR, "bg_hills.png"))
 

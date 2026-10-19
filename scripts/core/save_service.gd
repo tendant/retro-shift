@@ -3,7 +3,7 @@ extends RefCounted
 ## Versioned profile saves (§8): validate on load, back up before migrating,
 ## fall back to defaults on corruption.
 
-const SCHEMA_VERSION := 1
+const SCHEMA_VERSION := 2
 const PROFILE_FILE := "profile.json"
 
 ## Current schema version. A variable so tests can exercise migrations.
@@ -16,6 +16,7 @@ var _storage: SaveStorage
 
 func _init(storage: SaveStorage) -> void:
 	_storage = storage
+	migrations[1] = _migrate_1_to_2
 
 
 func load_profile() -> PlayerProfile:
@@ -45,6 +46,14 @@ func save_profile(profile: PlayerProfile) -> bool:
 	var data := profile.to_dict()
 	data["schema_version"] = schema_version
 	return _storage.write_text(PROFILE_FILE, JSON.stringify(data, "\t"))
+
+
+## v2 replaced the two placeholder events with the Sunrise Coast Cup. Keep
+## credits, upgrades and settings; event progress restarts at the new cup.
+static func _migrate_1_to_2(data: Dictionary) -> Dictionary:
+	data.erase("unlocked_events")
+	data.erase("best_results")
+	return data
 
 
 ## Keeps the bad file for inspection and starts from defaults.

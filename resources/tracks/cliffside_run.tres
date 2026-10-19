@@ -1,0 +1,88 @@
+[gd_resource type="Resource" script_class="Track" format=3]
+
+[ext_resource type="Script" path="res://scripts/track/track_palette.gd" id="1_4qi4j"]
+[ext_resource type="Script" path="res://scripts/track/track.gd" id="2_f2m12"]
+[ext_resource type="Script" path="res://scripts/track/track_segment.gd" id="3_p6v4n"]
+
+[sub_resource type="Resource" id="Resource_vulee"]
+script = ExtResource("1_4qi4j")
+sky_top = Color(0.20392157, 0.3764706, 0.76862746, 1)
+sky_horizon = Color(0.6901961, 0.83137256, 0.9411765, 1)
+grass_light = Color(0.28235295, 0.627451, 0.26666668, 1)
+grass_dark = Color(0.23529412, 0.5647059, 0.22745098, 1)
+
+[sub_resource type="Resource" id="Resource_im4w3"]
+script = ExtResource("3_p6v4n")
+length_m = 350.0
+scenery_id = &"posts"
+
+[sub_resource type="Resource" id="Resource_60wwt"]
+script = ExtResource("3_p6v4n")
+length_m = 150.0
+curvature_rad_per_m = 0.004
+elevation_delta_m = 18.0
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_0dkp5"]
+script = ExtResource("3_p6v4n")
+length_m = 80.0
+elevation_delta_m = 4.0
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_wy3vp"]
+script = ExtResource("3_p6v4n")
+length_m = 80.0
+elevation_delta_m = -6.0
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_q6ov0"]
+script = ExtResource("3_p6v4n")
+length_m = 120.0
+curvature_rad_per_m = -0.011111111111111112
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_xd0ef"]
+script = ExtResource("3_p6v4n")
+length_m = 140.0
+curvature_rad_per_m = 0.0125
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_lonfn"]
+script = ExtResource("3_p6v4n")
+length_m = 110.0
+curvature_rad_per_m = -0.01
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_a2vck"]
+script = ExtResource("3_p6v4n")
+length_m = 200.0
+elevation_delta_m = -16.0
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_ws0pt"]
+script = ExtResource("3_p6v4n")
+length_m = 300.0
+curvature_rad_per_m = 0.007692307692307693
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_up7d8"]
+script = ExtResource("3_p6v4n")
+length_m = 200.0
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_ehcn8"]
+script = ExtResource("3_p6v4n")
+length_m = 568.2356865948857
+curvature_rad_per_m = 0.007142857142857143
+scenery_id = &"trees"
+
+[sub_resource type="Resource" id="Resource_3erbi"]
+script = ExtResource("3_p6v4n")
+length_m = 150.0
+scenery_id = &"posts"
+
+[resource]
+script = ExtResource("2_f2m12")
+display_name = "Cliffside Run"
+palette = SubResource("Resource_vulee")
+segments = Array[ExtResource("3_p6v4n")]([SubResource("Resource_im4w3"), SubResource("Resource_60wwt"), SubResource("Resource_0dkp5"), SubResource("Resource_wy3vp"), SubResource("Resource_q6ov0"), SubResource("Resource_xd0ef"), SubResource("Resource_lonfn"), SubResource("Resource_a2vck"), SubResource("Resource_ws0pt"), SubResource("Resource_up7d8"), SubResource("Resource_ehcn8"), SubResource("Resource_3erbi")])

@@ -14,7 +14,7 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 	@echo
-	@echo "Tracks: basic gentle hills straight s_curve hillcrest valley crest_into_curve"
+	@echo "Tracks: harbor_mile lighthouse_loop cliffside_run, dev: basic straight s_curve hillcrest valley crest_into_curve"
 
 run: ## Play from the garage (events, upgrades, saves)
 	$(GODOT) --path .

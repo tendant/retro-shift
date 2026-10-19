@@ -4,7 +4,7 @@ extends Node
 
 const GARAGE_SCENE := "res://scenes/garage.tscn"
 const RACE_SCENE := "res://scenes/race.tscn"
-const EVENT_PATHS := ["res://resources/events/event_1.tres", "res://resources/events/event_2.tres"]
+const CUP_PATHS := ["res://resources/cups/sunrise_coast.tres"]
 ## Flags that skip the garage and drop straight into a free race.
 const DEV_RACE_FLAGS := ["--track=", "--opponents=", "--autodrive"]
 ## Imported with integer-only scaling so pixels stay square.
@@ -18,6 +18,8 @@ const MUSIC_VOLUME_DB := -8.0
 const SETTING_MUSIC := "music_on"
 const SETTING_SFX := "sfx_on"
 
+var cups: Array[CupDefinition] = []
+## Every event in championship order.
 var events: Array[EventDefinition] = []
 var progression: Progression
 ## Event being raced, or null for a free race (no rewards).
@@ -30,8 +32,10 @@ var _music_name: StringName
 
 func _ready() -> void:
 	InputBindings.install_defaults()
-	for path: String in EVENT_PATHS:
-		events.append(load(path))
+	for path: String in CUP_PATHS:
+		var cup: CupDefinition = load(path)
+		cups.append(cup)
+		events.append_array(cup.events)
 	progression = Progression.new(SaveService.new(FileSaveStorage.new()))
 	_setup_audio()
 	get_tree().auto_accept_quit = false
@@ -72,6 +76,13 @@ func event_by_id(id: StringName) -> EventDefinition:
 	return null
 
 
+func cup_of(event: EventDefinition) -> CupDefinition:
+	for cup in cups:
+		if cup.events.has(event):
+			return cup
+	return null
+
+
 func start_event(event: EventDefinition) -> void:
 	if not progression.profile.is_unlocked(event.id):
 		return
@@ -89,7 +100,7 @@ func start_free_race() -> void:
 func record_finish(place: int, time_s: float) -> Dictionary:
 	if current_event == null:
 		return {}
-	return progression.award(current_event, place, time_s)
+	return progression.award(current_event, place, time_s, cup_of(current_event))
 
 
 func go_to_garage() -> void:

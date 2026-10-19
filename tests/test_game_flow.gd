@@ -67,10 +67,10 @@ func test_event_race_awards_credits_on_finish() -> void:
 	var place := sim.result_order.find(0) + 1
 	assert_eq(place, 1)
 	assert_eq(Game.progression.profile.credits, 400)
-	assert_true(Game.progression.profile.is_unlocked(&"event_2"))
+	assert_true(Game.progression.profile.is_unlocked(&"lighthouse_loop"))
 	var hud: Hud = race.get_node("GameView/Hud")
 	assert_eq(hud.result_notes[0], "+400 credits")
-	assert_true(Array(hud.result_notes).has("Unlocked: Ridge Line Trophy"))
+	assert_true(Array(hud.result_notes).has("Unlocked: Lighthouse Loop"))
 
 
 func test_race_uses_upgraded_player_car() -> void:

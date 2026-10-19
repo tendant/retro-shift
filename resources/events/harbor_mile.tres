@@ -1,16 +1,17 @@
 [gd_resource type="Resource" script_class="EventDefinition" format=3]
 
 [ext_resource type="Script" path="res://scripts/progression/event_definition.gd" id="1_event"]
+[ext_resource type="Resource" path="res://resources/tracks/harbor_mile.tres" id="2_track"]
 
 [resource]
 script = ExtResource("1_event")
-id = &"event_2"
-display_name = "Ridge Line Trophy"
-track_name = &"hills"
+id = &"harbor_mile"
+display_name = "Harbor Mile"
+track = ExtResource("2_track")
 laps = 3
 opponents = 5
-skill_min = 0.88
-skill_max = 1.0
+skill_min = 0.8
+skill_max = 0.88
 rubber_band_strength = 1.0
-reward_mult = 1.5
-unlocks = &""
+reward_mult = 1.0
+unlocks = &"lighthouse_loop"
