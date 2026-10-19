@@ -3,8 +3,12 @@ extends Node
 ## UI/game-state input (pause, restart, debug, track switching).
 
 const VIEW_HEIGHT := 240
+## Opponent skill spread (§7); the first opponent is the weakest.
+const SKILL_MIN := 0.86
+const SKILL_MAX := 1.0
 
 @export var track_name: StringName = &"basic"
+@export_range(0, 5) var opponents: int = 5
 
 var _track_index: int = 0
 var _autodrive: bool = false
@@ -28,6 +32,9 @@ func _ready() -> void:
 	if requested != "":
 		track_name = StringName(requested)
 	_autodrive = OS.get_cmdline_user_args().has("--autodrive")
+	var opponents_arg := _cmdline_value("--opponents=")
+	if opponents_arg.is_valid_int():
+		opponents = clampi(opponents_arg.to_int(), 0, 5)
 	_renderer.debug_enabled = OS.get_cmdline_user_args().has("--debug")
 	_track_index = maxi(0, TestTracks.NAMES.find(track_name))
 	_start_race()
@@ -50,9 +57,13 @@ func _start_race() -> void:
 	get_tree().paused = false
 	_hud.paused = false
 	var track := TestTracks.make(TestTracks.NAMES[_track_index])
-	_sim.setup(track, VehicleParams.new(), PlayerInputAdapter.new())
+	_sim.setup(track, VehicleParams.new(), PlayerInputAdapter.new(), opponents + 1)
+	for car in range(1, opponents + 1):
+		var t := float(car - 1) / maxf(1.0, opponents - 1)
+		var lane: float = OpponentAI.LANES[car % OpponentAI.LANES.size()]
+		_sim.set_input_source(car, OpponentAI.new(_sim, car, lerpf(SKILL_MIN, SKILL_MAX, t), lane))
 	if _autodrive:
-		_sim.input_source = AutopilotInput.new(_sim)
+		_sim.set_input_source(RaceSimulation.PLAYER, OpponentAI.new(_sim, RaceSimulation.PLAYER))
 	_renderer.sim = _sim
 	_renderer.reset_camera()
 	_hud.sim = _sim

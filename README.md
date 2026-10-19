@@ -11,6 +11,7 @@ Or call Godot directly:
 ```sh
 godot --path .                          # play (opens the race scene)
 godot --path . -- --track=s_curve       # pick a test track
+godot --path . -- --opponents=1         # field size, 0-5 AI (default 5)
 godot --path . -- --autodrive --debug   # hands-off drive with debug overlay
 ```
 
@@ -32,9 +33,9 @@ tools/run_tests.sh   # GUT, headless; same command CI runs
 
 ## Layout
 
-- `scripts/track/` – `TrackSegment`, `Track` (lookup, continuous heading/height), test tracks
-- `scripts/simulation/` – 60 Hz `RaceSimulation`, vehicle model, snapshot buffers
+- `scripts/track/` – `TrackSegment`, `Track` (lookup, continuous heading/height), test tracks, minimap
+- `scripts/simulation/` – 60 Hz `RaceSimulation` (collisions, ranking, results), vehicle model, snapshots
 - `scripts/rendering/` – camera-relative `RoadProjector`, far-to-near `RoadRenderer`, HUD
 - `scripts/core/` – race scene wiring, input bindings/adapter
-- `scripts/ai/` – autopilot (v_max target speed; seed of the opponent AI)
+- `scripts/ai/` – opponent AI (v_max target speed, follow/pass lanes); also drives `--autodrive`
 - `tests/` – GUT tests

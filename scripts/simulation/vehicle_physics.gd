@@ -16,9 +16,10 @@ static func is_off_road(state: VehicleState, track: Track) -> bool:
 	return absf(state.x_m) > track.half_width_at(state.s_m)
 
 
-## Advances one car by `dt`. Returns true when a nitro boost fired this step.
+## Advances one car by `dt`. `top_speed_mult` scales the speed cap (AI
+## rubber-banding). Returns true when a nitro boost fired this step.
 static func step(state: VehicleState, input: DrivingInput, params: VehicleParams,
-		track: Track, dt: float) -> bool:
+		track: Track, dt: float, top_speed_mult: float = 1.0) -> bool:
 	var half_width := track.half_width_at(state.s_m)
 	var off_road := absf(state.x_m) > half_width
 
@@ -40,7 +41,7 @@ static func step(state: VehicleState, input: DrivingInput, params: VehicleParams
 		forward_accel -= params.rolling_drag_mps2 + params.aero_drag_per_m * speed * speed
 		if off_road:
 			forward_accel -= params.off_road_drag_mps2
-	var cap := params.max_speed_mps * (params.nitro_speed_mult if boost else 1.0)
+	var cap := params.max_speed_mps * top_speed_mult * (params.nitro_speed_mult if boost else 1.0)
 	var new_speed := speed + forward_accel * dt
 	if speed <= cap:
 		new_speed = minf(new_speed, cap)

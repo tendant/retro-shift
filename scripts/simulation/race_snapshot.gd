@@ -14,6 +14,7 @@ var steer := PackedFloat64Array()
 var nitro_remaining := PackedInt32Array()
 var nitro_active := PackedByteArray()
 var finished := PackedByteArray()
+var position := PackedInt32Array()  # 1-based race position
 
 
 func resize(count: int) -> void:
@@ -26,3 +27,4 @@ func resize(count: int) -> void:
 	nitro_remaining.resize(count)
 	nitro_active.resize(count)
 	finished.resize(count)
+	position.resize(count)

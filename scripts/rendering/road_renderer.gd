@@ -20,7 +20,8 @@ const TREE_LEAVES := Color8(24, 104, 40)
 const POST := Color8(240, 240, 240)
 const POST_BAND := Color8(32, 32, 32)
 const PLAYER_BODY := Color8(220, 40, 40)
-const AI_BODY := Color8(40, 96, 220)
+const AI_BODIES := [Color8(40, 96, 220), Color8(240, 200, 40), Color8(40, 176, 96),
+		Color8(232, 120, 32), Color8(160, 64, 200), Color8(232, 232, 232)]
 const CAR_GLASS := Color8(40, 48, 72)
 const CAR_TYRE := Color8(24, 24, 24)
 const CAR_LIGHT := Color8(255, 200, 64)
@@ -81,7 +82,11 @@ func _process(delta: float) -> void:
 	var s_cam := _car_s[RaceSimulation.PLAYER] - cam_back_offset_m
 	_projector.build(sim.track, s_cam, _cam_x, cam_height_m, get_viewport_rect().size,
 			deg_to_rad(vertical_fov_deg))
+	var lap_length := sim.track.lap_length_m
 	for i in _car_s.size():
+		# Opponents a lap ahead/behind are still physically right here.
+		if i != RaceSimulation.PLAYER:
+			_car_s[i] = s_cam + fposmod(_car_s[i] - s_cam, lap_length)
 		_car_strip[i] = _projector.strip_at(_car_s[i])
 	queue_redraw()
 
@@ -109,10 +114,10 @@ func _draw() -> void:
 	for i in range(_projector.count - 2, -1, -1):
 		if _draw_strip(i, view):
 			_draw_scenery_on_strip(i)
-			_draw_cars_on_strip(i)
-	_draw_player()
+		# Cars are drawn even on hidden strips; nearer strips paint over them.
+		_draw_cars_on_strip(i)
 	if debug_enabled:
-		_draw_debug(view)
+		_draw_debug()
 
 
 func _draw_background(view: Vector2) -> void:
@@ -198,19 +203,21 @@ func _draw_scenery_on_strip(i: int) -> void:
 			_draw_post(base)
 
 
+## Draws cars standing on strip `i`, farthest first.
 func _draw_cars_on_strip(i: int) -> void:
-	for car in range(1, _car_strip.size()):
-		if _car_strip[car] == i:
-			var base := _projector.project_on_road(_car_s[car], _car_x[car])
-			if base.z > 0.0:
-				_draw_car(base, _car_steer[car], AI_BODY)
-
-
-func _draw_player() -> void:
-	var car := RaceSimulation.PLAYER
-	var base := _projector.project_on_road(_car_s[car], _car_x[car])
-	if base.z > 0.0:
-		_draw_car(base, _car_steer[car], PLAYER_BODY)
+	var drawn_s := INF
+	while true:
+		var next := -1
+		for car in _car_strip.size():
+			if _car_strip[car] == i and _car_s[car] < drawn_s and (next < 0 or _car_s[car] > _car_s[next]):
+				next = car
+		if next < 0:
+			return
+		drawn_s = _car_s[next]
+		var base := _projector.project_on_road(_car_s[next], _car_x[next])
+		if base.z > 0.0:
+			var body: Color = PLAYER_BODY if next == RaceSimulation.PLAYER else AI_BODIES[(next - 1) % AI_BODIES.size()]
+			_draw_car(base, _car_steer[next], body)
 
 
 # --- Placeholder sprites (procedural until Milestone 5 art) ---------------
@@ -261,7 +268,7 @@ func _rect(x: float, y: float, w: float, h: float, color: Color) -> void:
 
 # --- Debug overlay ---------------------------------------------------------
 
-func _draw_debug(view: Vector2) -> void:
+func _draw_debug() -> void:
 	var p := _projector
 	var last_segment := -1
 	for i in p.count:
@@ -293,7 +300,7 @@ func _draw_debug(view: Vector2) -> void:
 		"track %s  L %.0f m" % [track.display_name, track.lap_length_m],
 	])
 	for li in lines.size():
-		_text(Vector2(view.x - 150, 24 + li * 9), lines[li], DEBUG)
+		_text(Vector2(6, 64 + li * 9), lines[li], DEBUG)
 
 
 func _v_max_ahead(s: float, window_m: float) -> float:
